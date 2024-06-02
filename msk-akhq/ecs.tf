@@ -13,9 +13,16 @@ locals {
             groups:
               - admin
       connections:
-        msk-cluster:
+        msk-cluster-source:
           properties:
             bootstrap.servers: ${module.msk_cluster[0].bootstrap_brokers_sasl_iam}
+            security.protocol: SASL_SSL
+            sasl.mechanism: AWS_MSK_IAM
+            sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required awsDebugCreds=true;
+            sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+        msk-cluster-target:
+          properties:
+            bootstrap.servers: ${module.msk_cluster_2[0].bootstrap_brokers_sasl_iam}
             security.protocol: SASL_SSL
             sasl.mechanism: AWS_MSK_IAM
             sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required awsDebugCreds=true;
@@ -61,8 +68,8 @@ resource "aws_ecs_task_definition" "ecs_task_app" {
   execution_role_arn = aws_iam_role.task_execution_role.arn
   task_role_arn      = aws_iam_role.task_role.arn
 
-  cpu                      = 1024
-  memory                   = 2048
+  cpu                      = 2048
+  memory                   = 4096
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
 

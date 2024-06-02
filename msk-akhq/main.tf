@@ -21,7 +21,7 @@ terraform {
   }
   backend "s3" {
     bucket  = "aws-lab-terraform-states"
-    key     = "states/aws-lab/lab01"
+    key     = "states/aws-lab/${basename(path.cwd)}"
     region  = "eu-west-3"
     encrypt = "true"
   }
