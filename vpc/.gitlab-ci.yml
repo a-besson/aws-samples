@@ -1,0 +1,21 @@
+#
+# Provision VPC Stack
+#
+
+quality:
+  stage: quality
+  image: zenika/terraform-aws-cli
+  script:
+    - terraform validate
+
+security:
+  stage: quality
+  image: checkmarx/kics:latest
+  script:
+    - kics scan --no-progress -p ${PWD} -o ${PWD} --report-formats json --output-name kics-results
+  artifacts:
+    name: kics-results.json
+    paths:
+      - kics-results.json
+    when: always
+    expire_in: 1 hour
