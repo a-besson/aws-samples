@@ -1,6 +1,6 @@
 
 module "vpc_endpoints" {
-  source = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
+  source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
   version = "5.13.0"
 
   vpc_id = module.vpc.vpc_id
@@ -50,10 +50,10 @@ module "vpc_endpoints" {
       tags       = { Name = "ecr-dkr-vpc-endpoint" }
     },
     rds = {
-      service            = "rds"
+      service    = "rds"
       policy     = data.aws_iam_policy_document.vpc_endpoint_policy_default.json
-      subnet_ids         = module.vpc.private_subnets
-      tags               = { Name = "rds-vpc-endpoint" }
+      subnet_ids = module.vpc.private_subnets
+      tags       = { Name = "rds-vpc-endpoint" }
     },
     logs = {
       service    = "logs"
@@ -91,7 +91,7 @@ data "aws_iam_policy_document" "vpc_endpoint_policy_default" {
     condition {
       test     = "StringEquals"
       variable = "aws:sourceVpc"
-      values = [module.vpc.vpc_id]
+      values   = [module.vpc.vpc_id]
     }
     principals {
       type        = "*"

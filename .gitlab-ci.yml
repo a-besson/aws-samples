@@ -6,7 +6,7 @@ stages:
 include:
   - local: vpc/.gitlab-ci.yml
 
-quality:
+lint:
   stage: quality
   image: zenika/terraform-aws-cli
   script:

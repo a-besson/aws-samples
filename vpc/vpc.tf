@@ -5,7 +5,7 @@ locals {
 
 # kics-scan ignore-block
 module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
+  source  = "terraform-aws-modules/vpc/aws"
   version = "5.13.0"
 
   name = "vpc-aws-lab"
@@ -19,9 +19,9 @@ module "vpc" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  enable_nat_gateway  = true
-  single_nat_gateway  = true
-  reuse_nat_ips       = false
+  enable_nat_gateway = true
+  single_nat_gateway = true
+  reuse_nat_ips      = false
 
   tags = local.tags
 }
