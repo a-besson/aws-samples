@@ -1,0 +1,12 @@
+stages:
+  - build
+  - deploy
+
+
+build:
+  stage: build
+  image: zenika/terraform-aws-cli
+  script:
+    - terraform -version
+    - aws --version
+    - /usr/bin/python --version
