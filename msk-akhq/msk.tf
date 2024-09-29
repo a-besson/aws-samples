@@ -1,7 +1,8 @@
 
 module "msk_cluster" {
-  count  = 1
-  source = "terraform-aws-modules/msk-kafka-cluster/aws"
+  count   = 1
+  source  = "terraform-aws-modules/msk-kafka-cluster/aws"
+  version = "2.5.0"
 
   name = local.name
 
@@ -10,7 +11,7 @@ module "msk_cluster" {
   number_of_broker_nodes = 3
 
   broker_node_instance_type  = "kafka.t3.small"
-  broker_node_client_subnets = module.vpc.private_subnets
+  broker_node_client_subnets = local.states.vpc.subnets_private_ids
   broker_node_storage_info = {
     ebs_storage_info = { volume_size = 20 }
   }
@@ -21,8 +22,6 @@ module "msk_cluster" {
   broker_node_security_groups = [module.security_group.security_group_id]
 
   create_connect_worker_configuration = false
-
-  tags = local.tags
 }
 
 module "security_group" {
@@ -31,14 +30,12 @@ module "security_group" {
 
   name        = local.name
   description = "Security group for ${local.name}"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = local.states.vpc.vpc_id
 
-  ingress_cidr_blocks = module.vpc.private_subnets_cidr_blocks
+  ingress_cidr_blocks = local.states.vpc.subnets_private_cidr
   ingress_rules = [
     "kafka-broker-tcp",
     "kafka-broker-sasl-iam-tcp",
     "kafka-broker-tls-tcp"
   ]
-
-  tags = local.tags
 }

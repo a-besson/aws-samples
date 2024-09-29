@@ -10,6 +10,7 @@ locals {
 }
 
 data "aws_caller_identity" "current" {}
+data "aws_availability_zones" "available" {}
 
 terraform {
   required_version = ">= 1.9.0"
@@ -21,7 +22,7 @@ terraform {
   }
   backend "s3" {
     bucket  = "aws-lab-terraform-states"
-    key     = "states/aws-lab/lab01"
+    key     = "states/aws-lab/vpc"
     region  = "eu-west-3"
     encrypt = "true"
   }

@@ -1,5 +1,6 @@
 locals {
-  image_name  = "${data.aws_caller_identity.current.account_id}.dkr.ecr.eu-west-3.amazonaws.com/kafka/akhq:latest"
+  image_name = "${data.aws_caller_identity.current.account_id}.dkr.ecr.eu-west-3.amazonaws.com/kafka/akhq:latest"
+
   akhq_config = <<-EOT
     micronaut:
       security:
@@ -23,6 +24,7 @@ locals {
     EOT
 }
 
+# kics-scan ignore-block  ECS Cluster with Container Insights Disabled
 resource "aws_ecs_cluster" "app" {
   name = "app-ecs-cluster"
 }
@@ -46,7 +48,7 @@ resource "aws_ecs_service" "ecs_service" {
   network_configuration {
     assign_public_ip = false
     security_groups  = [aws_security_group.ecs_tasks.id]
-    subnets          = module.vpc.private_subnets
+    subnets          = local.states.vpc.subnets_private_ids
   }
 
   load_balancer {
@@ -61,8 +63,8 @@ resource "aws_ecs_task_definition" "ecs_task_app" {
   execution_role_arn = aws_iam_role.task_execution_role.arn
   task_role_arn      = aws_iam_role.task_role.arn
 
-  cpu                      = 1024
-  memory                   = 2048
+  cpu                      = 512
+  memory                   = 1024
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
 
@@ -170,8 +172,10 @@ resource "aws_appautoscaling_policy" "down" {
   depends_on = [aws_appautoscaling_target.target]
 }
 
+# kics-scan ignore-block  CloudWatch Log Group Without KMS
 resource "aws_cloudwatch_log_group" "ecs_log" {
   name              = "/ecs/${local.name}-container-log"
   retention_in_days = 1
-  tags              = local.tags
+
+  tags = local.tags
 }

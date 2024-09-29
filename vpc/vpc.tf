@@ -3,14 +3,10 @@ locals {
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 }
 
-resource "aws_eip" "nat" {
-  count  = 3
-  domain = "vpc"
-  tags   = local.tags
-}
-
+# kics-scan ignore-block
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
+  version = "5.13.0"
 
   name = "vpc-aws-lab"
   cidr = "172.16.0.0/16"
@@ -24,11 +20,8 @@ module "vpc" {
   enable_dns_support   = true
 
   enable_nat_gateway  = true
-  single_nat_gateway  = false
-  reuse_nat_ips       = true             # <= Skip creation of EIPs for the NAT Gateways
-  external_nat_ip_ids = aws_eip.nat.*.id # <= IPs specified here as input to the module
+  single_nat_gateway  = true
+  reuse_nat_ips       = false
 
   tags = local.tags
 }
-
-

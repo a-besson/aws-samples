@@ -41,15 +41,15 @@ data "aws_iam_policy_document" "ecs_task_policy" {
       "ecr:BatchGetImage"
     ]
     resources = ["*"]
-    condition {
-      test     = "StringEquals"
-      variable = "aws:sourceVpce"
-      values   = [module.vpc_endpoints.endpoints["ecr_dkr"].id]
-    }
+    #condition {
+    #  test     = "StringEquals"
+    #  variable = "aws:sourceVpce"
+    #  values   = [module.vpc_endpoints.endpoints["ecr_dkr"].id]
+    #}
     condition {
       test     = "StringEquals"
       variable = "aws:sourceVpc"
-      values   = [module.vpc.vpc_id]
+      values   = [local.states.vpc.vpc_id]
     }
   }
   statement {

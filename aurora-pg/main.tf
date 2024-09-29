@@ -9,8 +9,6 @@ locals {
   }
 }
 
-data "aws_caller_identity" "current" {}
-
 terraform {
   required_version = ">= 1.9.0"
   required_providers {
@@ -18,10 +16,14 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.4"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.4"
+    }
   }
   backend "s3" {
     bucket  = "aws-lab-terraform-states"
-    key     = "states/aws-lab/lab01"
+    key     = "states/aws-lab/aurora-pg"
     region  = "eu-west-3"
     encrypt = "true"
   }

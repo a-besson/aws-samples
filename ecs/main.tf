@@ -1,6 +1,9 @@
 locals {
   name = "lab-${basename(path.cwd)}"
 
+  container_name = "ecs-sample"
+  container_port = 8080
+
   tags = {
     Environment = "dev"
     Project     = "aws-samples/${local.name}"
@@ -21,7 +24,7 @@ terraform {
   }
   backend "s3" {
     bucket  = "aws-lab-terraform-states"
-    key     = "states/aws-lab/lab01"
+    key     = "states/aws-lab/ecs"
     region  = "eu-west-3"
     encrypt = "true"
   }
@@ -30,8 +33,4 @@ terraform {
 provider "aws" {
   profile = var.aws_profile
   region  = var.aws_region
-
-  default_tags {
-    tags = local.tags
-  }
 }
