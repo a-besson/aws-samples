@@ -24,11 +24,11 @@ module "aurora_master" {
   engine_version    = data.aws_rds_engine_version.postgresql.version
   storage_encrypted = true
 
-  database_name               = "demo"
-  master_username             = "adminpg"
-  manage_master_user_password = true
+  database_name                       = "demo"
+  master_username                     = "adminpg"
+  manage_master_user_password         = true
   iam_database_authentication_enabled = true
-  
+
   vpc_id               = local.states.vpc.vpc_id
   db_subnet_group_name = aws_db_subnet_group.default.name
   security_group_rules = {
