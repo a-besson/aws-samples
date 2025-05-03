@@ -21,7 +21,7 @@ terraform {
     }
   }
   backend "s3" {
-    bucket  = "aws-lab-terraform-states"
+    bucket  = "aws-lab-tf-states"
     key     = "states/aws-lab/vpc"
     region  = "eu-west-3"
     encrypt = "true"

@@ -1,8 +1,15 @@
 .idea/
+builds/
+layer/
+node_modules/
+python/
+*.zip
 
 # Local .terraform directories
 **/.terraform/*
 **/.terraform.lock*
+plan.out
+plan.json
 
 # .tfstate files
 *.tfstate

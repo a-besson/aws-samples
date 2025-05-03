@@ -20,8 +20,8 @@ terraform {
     }
   }
   backend "s3" {
-    bucket  = "aws-lab-terraform-states"
-    key     = "states/aws-lab/lab01"
+    bucket  = "aws-lab-tf-states"
+    key     = "states/aws-lab/msk"
     region  = "eu-west-3"
     encrypt = "true"
   }

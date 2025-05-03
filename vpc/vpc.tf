@@ -9,7 +9,7 @@ module "vpc" {
   version = "5.13.0"
 
   name = "vpc-aws-lab"
-  cidr = "172.16.0.0/16"
+  cidr = local.vpc_cidr
 
   azs              = local.azs
   public_subnets   = [for k, v in local.azs : cidrsubnet(local.vpc_cidr, 8, k)]
@@ -19,8 +19,8 @@ module "vpc" {
   enable_dns_hostnames = true
   enable_dns_support   = true
 
-  enable_nat_gateway = true
-  single_nat_gateway = true
+  enable_nat_gateway = false
+  single_nat_gateway = false
   reuse_nat_ips      = false
 
   tags = local.tags

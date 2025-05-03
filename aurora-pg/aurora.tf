@@ -4,18 +4,33 @@ resource "random_password" "master" {
   special = true
 }
 
-module "aurora" {
-  source  = "terraform-aws-modules/rds-aurora/aws"
-  version = "9.9.1"
+resource "aws_db_subnet_group" "default" {
+  name       = "${local.name}-rds-subnet-group"
+  subnet_ids = local.states.vpc.subnets_database_ids
+}
 
-  name              = "${local.name}-postgresqlv2"
+data "aws_rds_engine_version" "postgresql" {
+  engine  = "aurora-postgresql"
+  version = "16.4"
+}
+
+module "aurora_master" {
+  source  = "terraform-aws-modules/rds-aurora/aws"
+  version = "9.11.0"
+
+  name              = "${local.name}-postgresql"
   engine            = "aurora-postgresql"
   engine_mode       = "provisioned"
+  engine_version    = data.aws_rds_engine_version.postgresql.version
   storage_encrypted = true
-  master_username   = "useradmin"
 
+  database_name               = "demo"
+  master_username             = "adminpg"
+  manage_master_user_password = true
+  iam_database_authentication_enabled = true
+  
   vpc_id               = local.states.vpc.vpc_id
-  db_subnet_group_name = local.states.vpc.database_subnet_group_name
+  db_subnet_group_name = aws_db_subnet_group.default.name
   security_group_rules = {
     vpc_ingress = {
       cidr_blocks = local.states.vpc.subnets_private_cidr
@@ -24,21 +39,21 @@ module "aurora" {
 
   monitoring_interval = 60
 
-  apply_immediately   = true
-  skip_final_snapshot = true
-
+  apply_immediately = true
   serverlessv2_scaling_configuration = {
-    min_capacity = 0.5
-    max_capacity = 4
+    min_capacity             = 0
+    max_capacity             = 2
+    seconds_until_auto_pause = 360
   }
 
-  manage_master_user_password = false
-  master_password             = random_password.master.result
+  backup_retention_period = 1
+  skip_final_snapshot     = true
+  deletion_protection     = false
+
 
   instance_class = "db.serverless"
   instances = {
     one = {}
-    two = {}
   }
 
   #enabled_cloudwatch_logs_exports = ["postgresql"]

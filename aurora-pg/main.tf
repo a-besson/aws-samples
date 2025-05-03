@@ -22,7 +22,7 @@ terraform {
     }
   }
   backend "s3" {
-    bucket  = "aws-lab-terraform-states"
+    bucket  = "aws-lab-tf-states"
     key     = "states/aws-lab/aurora-pg"
     region  = "eu-west-3"
     encrypt = "true"

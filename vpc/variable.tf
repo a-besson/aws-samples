@@ -13,6 +13,6 @@ variable "aws_profile" {
 
 variable "terraform_states_bucket" {
   type        = string
-  default     = "aws-lab-terraform-states"
+  default     = "aws-lab-tf-states"
   description = "Terraform states bucket"
 }

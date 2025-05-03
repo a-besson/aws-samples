@@ -71,6 +71,10 @@ data "aws_iam_policy_document" "vpc_endpoint_policy_default" {
   statement {
     actions = ["*"]
     effect  = "Allow"
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
     resources = [
       "*",
     ]
@@ -92,10 +96,6 @@ data "aws_iam_policy_document" "vpc_endpoint_policy_default" {
       test     = "StringEquals"
       variable = "aws:sourceVpc"
       values   = [module.vpc.vpc_id]
-    }
-    principals {
-      type        = "*"
-      identifiers = ["*"]
     }
   }
 }
