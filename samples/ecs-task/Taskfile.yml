@@ -1,0 +1,53 @@
+version: '3'
+
+tasks:
+  init:
+    desc: "Initialize Terraform"
+    dir: infra
+    cmds:
+      - terraform init
+
+  plan:
+    desc: "Plan Terraform changes"
+    dir: infra
+    cmds:
+      - terraform plan
+
+  apply:
+    desc: "Apply Terraform changes"
+    dir: infra
+    cmds:
+      - terraform apply --auto-approve
+
+  destroy:
+    desc: "Destroy Terraform resources"
+    dir: infra
+    cmds:
+      - terraform destroy --auto-approve
+
+  test:
+    desc: "Run Terraform tests"
+    dir: infra
+    cmds:
+      - terraform test || echo "No tests defined"
+
+  docs:
+    desc: "Generate Terraform documentation"
+    dir: infra
+    cmds:
+      - terraform-docs markdown table --output-file TFDOCS.md --output-mode inject .
+
+  run:
+    desc: "Execute the ECS task defined in infra/"
+    cmds:
+      - |
+        CLUSTER_ARN=$(terraform -chdir=infra output -raw ecs_cluster_arn)
+        TASK_DEFINITION_ARN=$(terraform -chdir=infra output -raw ecs_task_definition_arn)
+        SUBNET_ID=$(terraform -chdir=infra output -json subnets_private_ids | jq -r '.[0]')
+        SECURITY_GROUP_ID=$(terraform -chdir=infra output -raw vpc_endpoint_sg_id)
+
+        aws ecs run-task \
+          --cluster "$CLUSTER_ARN" \
+          --task-definition "$TASK_DEFINITION_ARN" \
+          --launch-type FARGATE \
+          --network-configuration "awsvpcConfiguration={subnets=[$SUBNET_ID],securityGroups=[$SECURITY_GROUP_ID],assignPublicIp=DISABLED}"

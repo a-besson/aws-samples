@@ -1,0 +1,14 @@
+stages:
+  - quality
+  - build
+  - deploy
+
+include:
+  - local: vpc/.gitlab-ci.yml
+
+lint:
+  stage: quality
+  image: zenika/terraform-aws-cli
+  script:
+    - terraform fmt -recursive
+    - tflint --recursive

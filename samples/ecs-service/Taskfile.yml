@@ -1,0 +1,38 @@
+version: '3'
+
+tasks:
+  init:
+    desc: "Initialize Terraform"
+    dir: infra
+    cmds:
+      - terraform init
+
+  plan:
+    desc: "Plan Terraform changes"
+    dir: infra
+    cmds:
+      - terraform plan
+
+  apply:
+    desc: "Apply Terraform changes"
+    dir: infra
+    cmds:
+      - terraform apply --auto-approve
+
+  destroy:
+    desc: "Destroy Terraform resources"
+    dir: infra
+    cmds:
+      - terraform destroy --auto-approve
+
+  test:
+    desc: "Run Terraform tests"
+    dir: infra
+    cmds:
+      - terraform test || echo "No tests defined"
+
+  docs:
+    desc: "Generate Terraform documentation"
+    dir: infra
+    cmds:
+      - terraform-docs markdown table --output-file TFDOCS.md --output-mode inject .

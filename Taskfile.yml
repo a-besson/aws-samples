@@ -1,0 +1,148 @@
+version: '3'
+
+dotenv: [.env]
+
+vars:
+  SKILLS_CLI: npx -y skills
+  SKILLS:
+    - new-terraform-provider
+    - bahayonghang/drawio-skills@drawio
+    - provider-resources
+    - provider-actions
+    - refactor-module
+    - terraform-style-guide
+    - terraform-stacks
+    - terraform-test
+
+  BREW_DEPS:
+    - node
+    - terraform
+    - go-task/tap/go-task
+    - trivy
+    - pre-commit
+    - tflint
+    - terraform-docs
+    - gitleaks
+    - awscli
+
+tasks:
+  apply-all:
+    desc: "Déploie l'intégralité des stacks (Base d'abord, puis les services en parallèle)."
+    cmds:
+      - task: apply-base
+      - task: apply-samples
+
+  apply-base:
+    internal: true
+    cmds:
+      - task: terraform-cmd
+        vars: { DIR: "samples/base", CMD: "apply" }
+
+  apply-samples:
+    internal: true
+    cmds:
+      - task: terraform-cmd
+        vars: { DIR: "samples/rds-aurora-pg", CMD: "apply" }
+      - task: terraform-cmd
+        vars: { DIR: "samples/ecs-service", CMD: "apply" }
+      - task: terraform-cmd
+        vars: { DIR: "samples/ecs-task", CMD: "apply" }
+      - task: terraform-cmd
+        vars: { DIR: "samples/msk-akhq", CMD: "apply" }
+    parallel: true
+
+  destroy-all:
+    desc: "Détruit l'intégralité des ressources (Services d'abord en parallèle, puis Base à la fin)."
+    cmds:
+      - task: destroy-samples
+      - task: destroy-base
+
+  destroy-base:
+    internal: true
+    cmds:
+      - task: terraform-cmd
+        vars: { DIR: "samples/base", CMD: "destroy" }
+
+  destroy-samples:
+    internal: true
+    cmds:
+      - task: terraform-cmd
+        vars: { DIR: "samples/rds-aurora-pg", CMD: "destroy" }
+      - task: terraform-cmd
+        vars: { DIR: "samples/ecs-service", CMD: "destroy" }
+      - task: terraform-cmd
+        vars: { DIR: "samples/ecs-task", CMD: "destroy" }
+      - task: terraform-cmd
+        vars: { DIR: "samples/msk-akhq", CMD: "destroy" }
+    parallel: true
+
+  test-all:
+    desc: "Exécute tous les tests Terraform du projet en parallèle."
+    cmds:
+      - task: terraform-cmd
+        vars: { DIR: "samples/base", CMD: "test" }
+      - task: terraform-cmd
+        vars: { DIR: "samples/rds-aurora-pg", CMD: "test" }
+      - task: terraform-cmd
+        vars: { DIR: "samples/ecs-service", CMD: "test" }
+      - task: terraform-cmd
+        vars: { DIR: "samples/ecs-task", CMD: "test" }
+      - task: terraform-cmd
+        vars: { DIR: "samples/msk-akhq", CMD: "test" }
+    parallel: true
+
+  terraform-cmd:
+    internal: true
+    cmds:
+      - task: "{{.CMD}}"
+        dir: "{{.DIR}}"
+
+  review:
+    desc: "Exécute les contrôles de qualité (pre-commit) et le scan de sécurité (KICS)."
+    cmds:
+      - pre-commit run --all-files
+      - task: scan:kics
+
+  scan:kics:
+    desc: "Exécute le scan de sécurité IaC avec KICS via Podman."
+    cmds:
+      - podman run --rm -v $(pwd):/path checkmarx/kics scan -p /path -o /path/kics-results.json --ignore-on-exit results
+
+  init:
+    desc: "Configuration complète du projet : installation des dépendances système, skills IA et création du bucket de state."
+    cmds:
+      - task: deps-install
+      - task: skills
+      - task: bootstrap:s3
+
+  bootstrap:s3:
+    desc: "Vérifie ou crée le bucket S3 pour le Remote State Terraform."
+    vars:
+      BUCKET: "aws-lab-tf-states"
+      REGION: "eu-west-3"
+    cmds:
+      - |
+        aws s3api head-bucket --bucket {{.BUCKET}} 2>/dev/null || \
+        aws s3 mb s3://{{.BUCKET}} --region {{.REGION}}
+      - echo "Bucket {{.BUCKET}} est prêt."
+
+  deps-install:
+    desc: "Installe les dépendances système via Homebrew (macOS)."
+    cmds:
+      - for: { var: BREW_DEPS }
+        cmd: brew list {{.ITEM}} >/dev/null 2>&1 || brew install {{.ITEM}}
+
+  skills:
+    desc: "Installe et met à jour les dépendances skills IA."
+    cmds:
+      - cmd: mkdir -p .agents/skills/community
+      - for: { var: SKILLS }
+        cmd: "{{.SKILLS_CLI}} add hashicorp/agent-skills --skill {{.ITEM}} --agent antigravity -y"
+      - cmd: "{{.SKILLS_CLI}} update -y || echo 'Update skipped'"
+      - for: { var: SKILLS }
+        cmd: "mv .agents/skills/{{.ITEM}} .agents/skills/community/ 2>/dev/null || true"
+
+  default:
+    desc: "Liste toutes les commandes du projet."
+    cmds:
+      - task --list
