@@ -12,4 +12,3 @@ lint:
   script:
     - terraform fmt -recursive
     - tflint --recursive
-
