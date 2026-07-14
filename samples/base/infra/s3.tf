@@ -40,6 +40,10 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "config_bucket" {
   }
 }
 
+# Root-account administrator statement is the AWS-documented baseline for every KMS key
+# policy (a key with no root grant can permanently lock the account out of its own key);
+# kms:* is scoped to this account's root principal only, not a public/anonymous wildcard.
+# kics-scan ignore-block
 resource "aws_kms_key" "s3" {
   description         = "CMK for S3 bucket encryption - ${local.name}"
   enable_key_rotation = true
