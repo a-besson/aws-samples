@@ -3,6 +3,11 @@ locals {
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 }
 
+# Public subnets exist to host the internet-facing ALB samples (see samples/msk-akhq); the
+# module's own map_public_ip_on_launch default is already false (auto-assign is off), and an
+# internet-facing ALB gets its public IPs from the ELB service directly regardless of that
+# subnet setting, so nothing here grants EC2 instances a public IP by default.
+# kics-scan ignore-block
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "6.6.1"

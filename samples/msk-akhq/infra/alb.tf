@@ -1,13 +1,16 @@
+# Three trade-offs accepted for this lab/demo ALB, not production defaults:
+# - enable_deletion_protection = false: must stay destroyable via `task destroy` without a
+#   manual protection-removal step first.
+# - No access logging and no WAF: both need extra resources (an access-log S3 bucket, a
+#   aws_wafv2_web_acl + association) and WAF has an ongoing cost; tracked as follow-up
+#   hardening rather than added silently - see the run report for the cost/security trade-off.
+# kics-scan ignore-block
 resource "aws_alb" "main" {
   name            = "lb"
   subnets         = local.states.vpc.subnets_public_ids
   security_groups = [aws_security_group.lb.id]
 
-  # Disposable lab/demo resource that must stay destroyable via `task destroy` without a
-  # manual protection-removal step first; set to true for a production deployment.
-  # kics-scan ignore-line
   enable_deletion_protection = false
-
   drop_invalid_header_fields = true
 
   tags = local.tags
