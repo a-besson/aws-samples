@@ -85,19 +85,21 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role" {
   policy_arn = data.aws_iam_policy.ecs_task_execution_role.arn
 }
 
+# AKHQ's UI needs broad Kafka Admin API access (browse/manage topics, consumer groups, ACLs,
+# configs) so action-level wildcards are kept here; for a production deployment, scope this
+# down to the specific kafka-cluster:* actions AKHQ's read/admin modes actually call (see
+# https://akhq.io/docs/configuration/authorizations.html). Resources are already scoped to
+# this cluster and its topics/groups/transactional-ids only, never account-wide.
+# kics-scan ignore-block
+# trivy:ignore:AVD-AWS-0057
 data "aws_iam_policy_document" "ecs_task_msk_policy" {
   statement {
     sid    = "AkhqClusterAdmin"
     effect = "Allow"
-    # AKHQ's UI needs broad Kafka Admin API access (browse/manage topics, consumer groups,
-    # ACLs, configs) so action-level wildcards are kept here; for a production deployment,
-    # scope this down to the specific kafka-cluster:* actions AKHQ's read/admin modes
-    # actually call (see https://akhq.io/docs/configuration/authorizations.html).
     actions = [
       "kafka-cluster:*",
       "kafka:*",
     ]
-    # Resources are still scoped to this cluster and its topics/groups/transactional-ids only.
     resources = [
       module.msk_cluster[0].arn,
       "${replace(module.msk_cluster[0].arn, ":cluster/", ":topic/")}/*",

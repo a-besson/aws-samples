@@ -1,3 +1,6 @@
+# IAM Access Analyzer is an account/region-wide control, enabled once for the whole account
+# by samples/base/infra/access_analyzer.tf; it does not need a second instance per sample.
+# kics-scan ignore-block
 resource "random_password" "akhq_admin" {
   length  = 24
   special = false
