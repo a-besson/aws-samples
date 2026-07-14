@@ -160,7 +160,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          fetch-depth: 0 # full history so gitleaks can scan every past commit, not just HEAD
+          fetch-depth: 0 # full history of *this* ref, so gitleaks can scan every past commit on it
 
       - name: Install gitleaks
         run: |
@@ -168,8 +168,13 @@ jobs:
           tar -xzf gitleaks.tar.gz gitleaks
           sudo mv gitleaks /usr/local/bin/gitleaks
 
+      # --log-opts=HEAD restricts the scan to commits reachable from the checked-out ref.
+      # actions/checkout with fetch-depth: 0 fetches full history, and without this flag
+      # gitleaks walks every locally-known ref (git log --all), which pulls in every other
+      # branch in the repository - including ones this workflow run has no business auditing
+      # or fixing. Scoping to HEAD keeps this job to the branch actually being tested.
       - name: Run gitleaks (SARIF report)
-        run: gitleaks detect --source . --report-format sarif --report-path gitleaks-results.sarif --exit-code 0
+        run: gitleaks detect --source . --log-opts="HEAD" --report-format sarif --report-path gitleaks-results.sarif --exit-code 0
 
       - name: Upload Gitleaks SARIF
         if: always()
@@ -178,4 +183,4 @@ jobs:
           sarif_file: gitleaks-results.sarif
 
       - name: Run gitleaks (fail on findings)
-        run: gitleaks detect --source . --exit-code 1
+        run: gitleaks detect --source . --log-opts="HEAD" --exit-code 1
