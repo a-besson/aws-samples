@@ -1,5 +1,10 @@
 # SPECS.md - Decision Tracking
 
+## [2026-07-14] - Daily Log - Operational Review Prompt for Cloud Engineer Agent
+
+- Added `.agents/prompts/cloud-engineer-review.md`: a Sonnet 5-optimized mission prompt for a recurring autonomous agent covering MCO (obsolescence, vulnerabilities, issues), AWS service watch with PR-based evolution proposals (two-tier: direct PR vs RFC in `docs/proposals/`), CI/CD pipeline health (GitLab/GitHub dual-pipeline rule), and documentation sync.
+- Prompt encodes hard guardrails: PR-only delivery, no `apply`/`destroy`, pre-commit + `terraform validate`/`test` verification gate, ≤ 4 PRs per run, mandatory PR body contract (Context / Change / Risk & Rollback / Verification / Sources).
+
 ## [2026-04-08] - Daily Log - Project Industrialization & Taskfile Integration
 
 - Replaced legacy `Makefile` with root and local `Taskfile.yml` for unified orchestration.
