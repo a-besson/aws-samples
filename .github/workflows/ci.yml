@@ -7,11 +7,13 @@ on:
 
 permissions:
   contents: read
+  security-events: write # required to upload KICS/Trivy/Gitleaks SARIF to the Security tab
 
 env:
   TERRAFORM_VERSION: "1.15.8"
   TFLINT_VERSION: "v0.63.1"
   TERRAFORM_DOCS_VERSION: "v0.24.0"
+  GITLEAKS_VERSION: "8.30.1"
 
 jobs:
   pre-commit:
@@ -125,10 +127,55 @@ jobs:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
-      - name: Run Trivy config scan
+      # Report generation always succeeds, so the SARIF is uploaded to the Security tab even
+      # when findings exist; the gate is enforced separately below.
+      - name: Run Trivy config scan (SARIF report)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: "config"
+          scan-ref: "."
+          severity: "CRITICAL,HIGH"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          exit-code: "0"
+
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: Run Trivy config scan (fail on findings)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: "config"
           scan-ref: "."
           severity: "CRITICAL,HIGH"
           exit-code: "1"
+
+  gitleaks:
+    name: Gitleaks (secret scanning)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0 # full history so gitleaks can scan every past commit, not just HEAD
+
+      - name: Install gitleaks
+        run: |
+          curl -sSLo gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo mv gitleaks /usr/local/bin/gitleaks
+
+      - name: Run gitleaks (SARIF report)
+        run: gitleaks detect --source . --report-format sarif --report-path gitleaks-results.sarif --exit-code 0
+
+      - name: Upload Gitleaks SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+        with:
+          sarif_file: gitleaks-results.sarif
+
+      - name: Run gitleaks (fail on findings)
+        run: gitleaks detect --source . --exit-code 1
