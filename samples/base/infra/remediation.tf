@@ -46,6 +46,11 @@ resource "aws_iam_role_policy" "security_group_policy" {
     Statement = [
       {
         Effect = "Allow"
+        # Resource "*" is required here, not a shortcut: ec2:DescribeSecurityGroups has no
+        # resource-level permissions support at all, and the security group targeted by
+        # ec2:RevokeSecurityGroupIngress/Egress is only known at remediation time (it is
+        # whichever non-compliant group AWS Config's SSM automation document passes in via
+        # SecurityGroupId), so it cannot be scoped to a fixed ARN ahead of time.
         Action = [
           "ec2:RevokeSecurityGroupIngress",
           "ec2:RevokeSecurityGroupEgress",
