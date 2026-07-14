@@ -90,8 +90,8 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role" {
 # down to the specific kafka-cluster:* actions AKHQ's read/admin modes actually call (see
 # https://akhq.io/docs/configuration/authorizations.html). Resources are already scoped to
 # this cluster and its topics/groups/transactional-ids only, never account-wide.
-# kics-scan ignore-block
 # trivy:ignore:AVD-AWS-0057
+# kics-scan ignore-block
 data "aws_iam_policy_document" "ecs_task_msk_policy" {
   statement {
     sid    = "AkhqClusterAdmin"
