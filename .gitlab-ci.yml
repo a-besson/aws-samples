@@ -1,14 +1,74 @@
 stages:
   - quality
-  - build
-  - deploy
+  - security
 
-include:
-  - local: vpc/.gitlab-ci.yml
+variables:
+  TERRAFORM_VERSION: "1.15.8"
+  TFLINT_VERSION: "v0.63.1"
+  TERRAFORM_DOCS_VERSION: "v0.24.0"
+  KICS_VERSION: "v2.1.20"
+  TRIVY_VERSION: "0.72.0"
 
-lint:
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+pre-commit:
   stage: quality
-  image: zenika/terraform-aws-cli
+  image: python:3.12-slim
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends curl unzip git golang-go ca-certificates >/dev/null
+    - curl -sSLo /tmp/terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+    - unzip -o /tmp/terraform.zip -d /usr/local/bin
+    - curl -sSLo /tmp/tflint.zip "https://github.com/terraform-linters/tflint/releases/download/${TFLINT_VERSION}/tflint_linux_amd64.zip"
+    - unzip -o /tmp/tflint.zip -d /usr/local/bin
+    - curl -sSLo /tmp/terraform-docs.tar.gz "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-$(uname)-amd64.tar.gz"
+    - tar -xzf /tmp/terraform-docs.tar.gz -C /usr/local/bin terraform-docs
+    - chmod +x /usr/local/bin/terraform-docs
+    - pip install --quiet pre-commit
   script:
-    - terraform fmt -recursive
-    - tflint --recursive
+    - pre-commit run --all-files --show-diff-on-failure
+  cache:
+    key: pre-commit-$CI_COMMIT_REF_SLUG
+    paths:
+      - .cache/pre-commit
+  variables:
+    PRE_COMMIT_HOME: "${CI_PROJECT_DIR}/.cache/pre-commit"
+
+terraform-validate:
+  stage: quality
+  image: hashicorp/terraform:${TERRAFORM_VERSION}
+  parallel:
+    matrix:
+      - SAMPLE: [base, ecs-service, ecs-task, msk-akhq, rds-aurora-pg]
+  # No cloud credentials are provided to this job on purpose: this repository is public,
+  # so CI never holds AWS credentials that untrusted merge request code could exfiltrate.
+  # init -backend=false + validate catch syntax, type and module-contract errors without
+  # needing live AWS access; `terraform test` / `plan` / `apply` stay local `task` commands
+  # for maintainers who have their own credentials configured.
+  script:
+    - cd samples/${SAMPLE}/infra
+    - terraform fmt -check -diff
+    - terraform init -backend=false -input=false
+    - terraform validate
+
+kics:
+  stage: security
+  image:
+    name: checkmarx/kics:${KICS_VERSION}
+    entrypoint: [""]
+  script:
+    - kics scan -p . -o kics-results --report-formats json,sarif --fail-on high,medium
+  artifacts:
+    when: always
+    paths:
+      - kics-results/
+
+trivy:
+  stage: security
+  image:
+    name: aquasec/trivy:${TRIVY_VERSION}
+    entrypoint: [""]
+  script:
+    - trivy config --severity CRITICAL,HIGH --exit-code 1 .
