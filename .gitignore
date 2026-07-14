@@ -1,6 +1,7 @@
 .idea/
 builds/
 layer/
+.DS_Store
 node_modules/
 python/
 *.zip
