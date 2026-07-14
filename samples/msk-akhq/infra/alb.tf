@@ -3,11 +3,12 @@ resource "aws_alb" "main" {
   subnets         = local.states.vpc.subnets_public_ids
   security_groups = [aws_security_group.lb.id]
 
-  # kics-scan ignore-line
+  # kics-scan ignore-line: this is a disposable lab/demo resource that must be destroyable
+  # with `task destroy` without a manual protection-removal step first; set to true for
+  # any production deployment of this sample.
   enable_deletion_protection = false
 
-  # kics-scan ignore-line
-  drop_invalid_header_fields = false
+  drop_invalid_header_fields = true
 
   tags = local.tags
 }
@@ -36,8 +37,8 @@ resource "aws_alb_listener" "front_end" {
   load_balancer_arn = aws_alb.main.id
   port              = 443
   protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"
-  certificate_arn   = "arn:aws:acm:eu-west-3:637423225169:certificate/dc9a9379-8e80-43c1-80c4-0bf83991091d"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = var.acm_certificate_arn
 
   default_action {
     target_group_arn = aws_alb_target_group.app.id
