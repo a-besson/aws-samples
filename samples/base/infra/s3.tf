@@ -2,12 +2,12 @@
 # AWS Config bucket
 #
 
-# Server access logging is intentionally not enabled here: it needs a second bucket to
-# receive the logs (S3 access-log delivery only supports SSE-S3, not the SSE-KMS this bucket
-# uses for its own objects), and this bucket already only stores AWS Config snapshots - an
-# audit trail in its own right. Tracked as a follow-up hardening item, not added silently.
+# Create S3 bucket for AWS Config logs. Server access logging is intentionally not enabled:
+# it needs a second bucket to receive the logs (S3 access-log delivery only supports SSE-S3,
+# not the SSE-KMS this bucket uses for its own objects), and this bucket already only stores
+# AWS Config snapshots - an audit trail in its own right. Tracked as a follow-up hardening
+# item, not added silently.
 # kics-scan ignore-block
-# Create S3 bucket for AWS Config logs
 resource "aws_s3_bucket" "config_bucket" {
   bucket        = "aws-config-bucket-${data.aws_caller_identity.current.account_id}"
   force_destroy = true
