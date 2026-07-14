@@ -2,11 +2,13 @@
 module "msk_cluster" {
   count   = 1
   source  = "terraform-aws-modules/msk-kafka-cluster/aws"
-  version = "2.5.0"
+  version = "3.3.0"
 
   name = local.name
 
-  kafka_version = "3.5.1"
+  # Recommended MSK version (last to support both ZooKeeper and KRaft, extended support for
+  # a minimum of 2 years): https://docs.aws.amazon.com/msk/latest/developerguide/supported-kafka-versions.html
+  kafka_version = "3.9.x"
 
   number_of_broker_nodes = 3
 
@@ -19,23 +21,40 @@ module "msk_cluster" {
   client_authentication = {
     sasl = { iam = true }
   }
-  broker_node_security_groups = [module.security_group.security_group_id]
+  broker_node_security_groups = [module.security_group.id]
 
   create_connect_worker_configuration = false
 }
 
+locals {
+  # Port numbers for the MSK broker listeners this sample's clients need
+  # (source: terraform-aws-modules/security-group named-rule catalog).
+  msk_broker_ports = {
+    plaintext = 9092
+    tls       = 9094
+    sasl_iam  = 9098
+  }
+}
+
 module "security_group" {
   source  = "terraform-aws-modules/security-group/aws"
-  version = "~> 5.0"
+  version = "6.0.0"
 
-  name        = local.name
-  description = "Security group for ${local.name}"
-  vpc_id      = local.states.vpc.vpc_id
+  name            = local.name
+  use_name_prefix = false
+  description     = "Security group for ${local.name}"
+  vpc_id          = local.states.vpc.vpc_id
 
-  ingress_cidr_blocks = local.states.vpc.subnets_private_cidr
-  ingress_rules = [
-    "kafka-broker-tcp",
-    "kafka-broker-sasl-iam-tcp",
-    "kafka-broker-tls-tcp"
-  ]
+  ingress_rules = merge([
+    for rule_name, port in local.msk_broker_ports : {
+      for idx, cidr in local.states.vpc.subnets_private_cidr :
+      "${rule_name}_${idx}" => {
+        description = "Kafka ${rule_name} broker access from private subnets"
+        cidr_ipv4   = cidr
+        from_port   = port
+        to_port     = port
+        ip_protocol = "tcp"
+      }
+    }
+  ]...)
 }

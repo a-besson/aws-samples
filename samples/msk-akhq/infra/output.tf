@@ -12,3 +12,9 @@ output "msk_bootstrap_iam" {
   value       = module.msk_cluster[0].bootstrap_brokers_sasl_iam
   description = "MSK bootstrap brokers SASL IAM"
 }
+
+output "akhq_admin_password" {
+  value       = random_password.akhq_admin.result
+  description = "Generated password for the AKHQ 'admin' user (terraform output -raw akhq_admin_password)"
+  sensitive   = true
+}
