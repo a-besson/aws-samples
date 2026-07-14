@@ -1,0 +1,134 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  TERRAFORM_VERSION: "1.15.8"
+  TFLINT_VERSION: "v0.63.1"
+  TERRAFORM_DOCS_VERSION: "v0.24.0"
+
+jobs:
+  pre-commit:
+    name: Pre-commit (fmt, tflint, docs drift, secrets)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Setup Python
+        uses: actions/setup-python@v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Setup Go (for the gitleaks pre-commit hook)
+        uses: actions/setup-go@v6.5.0
+        with:
+          go-version: "1.24"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v6.3.0
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: Install terraform-docs
+        run: |
+          curl -Lo ./terraform-docs.tar.gz "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-$(uname)-amd64.tar.gz"
+          tar -xzf terraform-docs.tar.gz
+          chmod +x terraform-docs
+          sudo mv terraform-docs /usr/local/bin/terraform-docs
+
+      - name: Cache pre-commit environments
+        uses: actions/cache@v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit on all files
+        run: pre-commit run --all-files --show-diff-on-failure
+
+  terraform-validate:
+    name: terraform validate (${{ matrix.sample }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [base, ecs-service, ecs-task, msk-akhq, rds-aurora-pg]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform fmt -check
+        working-directory: samples/${{ matrix.sample }}/infra
+        run: terraform fmt -check -diff
+
+      # No cloud credentials are provided to this job on purpose: this repository is public
+      # and pull_request workflows from forks never receive repository secrets, so any
+      # AWS-authenticated step here would either fail for contributors or (if forced via
+      # pull_request_target) risk exposing credentials to untrusted PR code. `init -backend=false`
+      # + `validate` catch syntax, type and module-contract errors without needing live AWS
+      # access; `terraform test` / `plan` / `apply` stay local `task` commands for maintainers
+      # who have their own credentials configured.
+      - name: terraform init (no backend, no credentials required)
+        working-directory: samples/${{ matrix.sample }}/infra
+        run: terraform init -backend=false -input=false
+
+      - name: terraform validate
+        working-directory: samples/${{ matrix.sample }}/infra
+        run: terraform validate
+
+  kics:
+    name: KICS (IaC security scan)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Run KICS scan
+        uses: checkmarx/kics-github-action@v2.1.20
+        with:
+          path: "."
+          fail_on: high,medium
+          output_path: kics-results
+          output_formats: "json,sarif"
+
+      - name: Upload KICS SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4.37.0
+        with:
+          sarif_file: kics-results/results.sarif
+
+  trivy:
+    name: Trivy (misconfig & vulnerability scan)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Run Trivy config scan
+        uses: aquasecurity/trivy-action@0.36.0
+        with:
+          scan-type: "config"
+          scan-ref: "."
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
