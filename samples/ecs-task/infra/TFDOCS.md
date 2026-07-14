@@ -46,9 +46,9 @@ No modules.
 
 | Name | Description |
 | ---- | ----------- |
-| <a name="output_ecs_cluster_arn"></a> [ecs\_cluster\_arn](#output\_ecs\_cluster\_arn) | n/a |
-| <a name="output_ecs_task_definition_arn"></a> [ecs\_task\_definition\_arn](#output\_ecs\_task\_definition\_arn) | n/a |
+| <a name="output_ecs_cluster_arn"></a> [ecs\_cluster\_arn](#output\_ecs\_cluster\_arn) | ARN of the ECS cluster the batch task runs on |
+| <a name="output_ecs_task_definition_arn"></a> [ecs\_task\_definition\_arn](#output\_ecs\_task\_definition\_arn) | ARN of the batch task definition run by `task run` |
 | <a name="output_subnets_private_ids"></a> [subnets\_private\_ids](#output\_subnets\_private\_ids) | Private subnets IDs (task run launches here - no public IP assigned) |
 | <a name="output_vpc_endpoint_sg_id"></a> [vpc\_endpoint\_sg\_id](#output\_vpc\_endpoint\_sg\_id) | Security group allowing HTTPS to the VPC endpoints (ECR, logs, ...) used by `task run` |
-| <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | n/a |
+| <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | VPC id |
 <!-- END_TF_DOCS -->

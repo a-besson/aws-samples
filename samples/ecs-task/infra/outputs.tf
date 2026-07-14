@@ -1,13 +1,16 @@
 output "ecs_task_definition_arn" {
-  value = aws_ecs_task_definition.batch.arn
+  value       = aws_ecs_task_definition.batch.arn
+  description = "ARN of the batch task definition run by `task run`"
 }
 
 output "ecs_cluster_arn" {
-  value = aws_ecs_cluster.batch.arn
+  value       = aws_ecs_cluster.batch.arn
+  description = "ARN of the ECS cluster the batch task runs on"
 }
 
 output "vpc_id" {
-  value = local.states.vpc.vpc_id
+  value       = local.states.vpc.vpc_id
+  description = "VPC id"
 }
 
 output "subnets_private_ids" {

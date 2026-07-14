@@ -3,9 +3,9 @@ resource "aws_alb" "main" {
   subnets         = local.states.vpc.subnets_public_ids
   security_groups = [aws_security_group.lb.id]
 
-  # kics-scan ignore-line: this is a disposable lab/demo resource that must be destroyable
-  # with `task destroy` without a manual protection-removal step first; set to true for
-  # any production deployment of this sample.
+  # Disposable lab/demo resource that must stay destroyable via `task destroy` without a
+  # manual protection-removal step first; set to true for a production deployment.
+  # kics-scan ignore-line
   enable_deletion_protection = false
 
   drop_invalid_header_fields = true
