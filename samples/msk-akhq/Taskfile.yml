@@ -29,7 +29,7 @@ tasks:
     desc: "Run Terraform tests"
     dir: infra
     cmds:
-      - terraform test || echo "No tests defined"
+      - terraform test
 
   docs:
     desc: "Generate Terraform documentation"
