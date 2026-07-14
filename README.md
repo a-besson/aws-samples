@@ -1,7 +1,5 @@
 # AWS Terraform Samples
 
-![AWS Terraform Banner](file:///Users/adrien/.gemini/antigravity/brain/72926e80-349d-473b-a165-a7515fca5b23/aws_terraform_banner_1775664263363.png)
-
 A collection of **industrial-grade** Terraform samples for various AWS services and architectures. This repository follows a strict separation between **Infrastructure** and **Application** layers.
 
 ---
@@ -20,15 +18,15 @@ Every project in this repository follows the same industrial standard:
 ### Foundational Stacks
 | Sample | Description | Documentation |
 | :--- | :--- | :---: |
-| [Base](./samples/base) | Unified foundational stack (VPC & AWS Config) | [infra README](./samples/base/infra/README.md) |
+| [Base](./samples/base) | Unified foundational stack (VPC & AWS Config) | [README](./samples/base/README.md) |
 
 ### Service Samples
 | Sample | Description | Documentation |
 | :--- | :--- | :---: |
-| [Aurora PostgreSQL](./samples/rds-aurora-pg) | High-availability Aurora Serverless cluster | [infra README](./samples/rds-aurora-pg/infra/README.md) |
-| [ECS Service](./samples/ecs-service) | Elastic Container Service with Fargate | [infra README](./samples/ecs-service/infra/README.md) |
-| [ECS Task](./samples/ecs-task) | One-off ECS Task definition for batch jobs | [infra README](./samples/ecs-task/infra/README.md) |
-| [MSK with AKHQ](./samples/msk-akhq) | Managed Streaming for Kafka with AKHQ UI | [infra README](./samples/msk-akhq/infra/README.md) |
+| [Aurora PostgreSQL](./samples/rds-aurora-pg) | High-availability Aurora Serverless cluster | [README](./samples/rds-aurora-pg/README.md) |
+| [ECS Service](./samples/ecs-service) | Elastic Container Service with Fargate | [README](./samples/ecs-service/README.md) |
+| [ECS Task](./samples/ecs-task) | One-off ECS Task definition for batch jobs | [README](./samples/ecs-task/README.md) |
+| [MSK with AKHQ](./samples/msk-akhq) | Managed Streaming for Kafka with AKHQ UI | [README](./samples/msk-akhq/README.md) |
 
 ---
 
