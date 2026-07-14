@@ -1,7 +1,8 @@
-# kics-scan ignore-block: KICS' generic secret heuristic flags any resource with "password"
-# in its name/type. This is a false positive - random_password only generates an ephemeral
-# value; the real secret never touches state in plaintext form here because the cluster is
-# created with manage_master_user_password = true (AWS Secrets Manager-managed credential).
+# KICS' generic secret heuristic flags any resource with "password" in its name/type. This is
+# a false positive - random_password only generates an ephemeral value; the real secret never
+# touches state in plaintext form here because the cluster is created with
+# manage_master_user_password = true (AWS Secrets Manager-managed credential).
+# kics-scan ignore-block
 resource "random_password" "master" {
   length  = 20
   special = true

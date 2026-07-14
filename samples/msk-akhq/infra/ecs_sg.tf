@@ -2,9 +2,10 @@ locals {
   app_port = 8080
 }
 
-# kics-scan ignore-block: this is the internet-facing ALB for the AKHQ UI sample, so a public
-# ingress on the HTTPS listener port is the explicit intent, not an oversight. Egress-all is
-# standard for an ALB (it only proxies to the target group over HTTPS - see aws_alb_target_group.app).
+# This is the internet-facing ALB for the AKHQ UI sample, so a public ingress on the HTTPS
+# listener port is the explicit intent, not an oversight. Egress-all is standard for an ALB
+# (it only proxies to the target group over HTTPS - see aws_alb_target_group.app).
+# kics-scan ignore-block
 resource "aws_security_group" "lb" {
   name        = "cb-load-balancer-security-group"
   description = "controls access to the ALB"
@@ -30,9 +31,10 @@ resource "aws_security_group" "lb" {
 #
 # Traffic to the ECS cluster should only come from the LB
 #
-# kics-scan ignore-block: egress-all is required so the AKHQ task can reach the MSK brokers,
-# the ECR/logs VPC endpoints and AWS STS (for SASL/IAM auth); ingress is already scoped to the
-# ALB's own security group only, so the wider egress does not widen the task's attack surface.
+# Egress-all is required so the AKHQ task can reach the MSK brokers, the ECR/logs VPC
+# endpoints and AWS STS (for SASL/IAM auth); ingress is already scoped to the ALB's own
+# security group only, so the wider egress does not widen the task's attack surface.
+# kics-scan ignore-block
 resource "aws_security_group" "ecs_tasks" {
   name        = "cb-ecs-tasks-security-group"
   description = "allow inbound access from the ALB only"

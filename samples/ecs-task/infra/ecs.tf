@@ -1,5 +1,6 @@
-# kics-scan ignore-block: Container Insights is left disabled to minimize CloudWatch cost
-# on this batch/lab cluster; enable cluster_settings for production observability needs.
+# Container Insights disabled to minimize CloudWatch cost on this batch/lab cluster; enable
+# cluster_settings (containerInsights = enabled) for production observability needs.
+# kics-scan ignore-block
 resource "aws_ecs_cluster" "batch" {
   name = "${local.name}-cluster"
 }
@@ -46,6 +47,10 @@ resource "aws_cloudwatch_log_group" "batch" {
   kms_key_id        = aws_kms_key.logs.arn
 }
 
+# Root-account administrator statement is the AWS-documented baseline for every KMS key
+# policy (a key with no root grant can permanently lock the account out of its own key);
+# kms:* is scoped to this account's root principal only, not a public/anonymous wildcard.
+# kics-scan ignore-block
 resource "aws_kms_key" "logs" {
   description         = "CMK for CloudWatch Logs encryption - ${local.name}"
   enable_key_rotation = true
