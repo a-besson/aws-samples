@@ -3,7 +3,7 @@
 #
 module "ecs_cluster" {
   source  = "terraform-aws-modules/ecs/aws//modules/cluster"
-  version = "5.11.4"
+  version = "5.12.1"
 
   cluster_name = "ecs-fargate-cluster"
 
@@ -38,7 +38,7 @@ module "ecs_cluster" {
 
 module "ecs_service" {
   source  = "terraform-aws-modules/ecs/aws//modules/service"
-  version = "5.11.4"
+  version = "5.12.1"
 
   name        = "ecs-fargate-service"
   cluster_arn = module.ecs_cluster.arn
