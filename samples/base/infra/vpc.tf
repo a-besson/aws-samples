@@ -6,7 +6,7 @@ locals {
 # kics-scan ignore-block
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "5.13.0"
+  version = "5.21.0"
 
   name = "vpc-aws-lab"
   cidr = local.vpc_cidr
