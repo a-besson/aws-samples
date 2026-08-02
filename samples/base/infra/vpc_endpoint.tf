@@ -1,7 +1,7 @@
 
 module "vpc_endpoints" {
   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-  version = "5.13.0"
+  version = "6.6.1"
 
   vpc_id = module.vpc.vpc_id
 
@@ -66,6 +66,12 @@ module "vpc_endpoints" {
   tags = local.tags
 }
 
+# This endpoint policy uses wildcard actions/principals by design (each of the 6 AWS services
+# fronted by these endpoints would otherwise need its own hand-maintained action list). The
+# blast radius is bounded by two compensating controls: both the calling principal
+# (aws:PrincipalAccount) and the target resource (aws:ResourceAccount) must belong to this
+# account, and the request must originate from this VPC (aws:sourceVpc) - equivalent to AWS's
+# documented baseline VPC endpoint policy.
 # kics-scan ignore-block
 data "aws_iam_policy_document" "vpc_endpoint_policy_default" {
   statement {

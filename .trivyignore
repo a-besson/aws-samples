@@ -1,0 +1,9 @@
+# Accepted repo-wide: every "egress-all to 0.0.0.0/0" rule in this repo is a deliberate,
+# documented choice (outbound internet/AWS-API access for Fargate tasks and the demo ALB),
+# not an oversight - see the inline `# kics-scan ignore-block` comments next to each rule.
+AVD-AWS-0104
+
+# Accepted: samples/msk-akhq/infra/alb.tf's ALB is the intentionally public-facing entry
+# point for the AKHQ UI sample (see aws_security_group.lb's justification comment in
+# samples/msk-akhq/infra/ecs_sg.tf) - this is the explicit design, not accidental exposure.
+AVD-AWS-0053

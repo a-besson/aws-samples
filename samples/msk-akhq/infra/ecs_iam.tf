@@ -40,12 +40,9 @@ data "aws_iam_policy_document" "ecs_task_policy" {
       "ecr:GetDownloadUrlForLayer",
       "ecr:BatchGetImage"
     ]
-    resources = ["*"]
-    #condition {
-    #  test     = "StringEquals"
-    #  variable = "aws:sourceVpce"
-    #  values   = [module.vpc_endpoints.endpoints["ecr_dkr"].id]
-    #}
+    # Scoped to the private repository this sample copies the AKHQ image into (see README);
+    # further restricted to requests coming from this VPC below.
+    resources = ["arn:aws:ecr:${var.aws_region}:${data.aws_caller_identity.current.account_id}:repository/kafka/akhq"]
     condition {
       test     = "StringEquals"
       variable = "aws:sourceVpc"
@@ -53,14 +50,22 @@ data "aws_iam_policy_document" "ecs_task_policy" {
     }
   }
   statement {
+    sid    = "EcrAuthToken"
+    effect = "Allow"
+    # ecr:GetAuthorizationToken has no resource-level permissions support - "*" is the only
+    # valid value per https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonelasticcontainerregistry.html
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+  statement {
+    sid    = "TaskLogging"
     effect = "Allow"
     actions = [
-      "ecr:GetAuthorizationToken",
       "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = ["*"]
+    resources = ["${aws_cloudwatch_log_group.ecs_log.arn}:*"]
   }
 }
 
@@ -80,13 +85,26 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role" {
   policy_arn = data.aws_iam_policy.ecs_task_execution_role.arn
 }
 
+# AKHQ's UI needs broad Kafka Admin API access (browse/manage topics, consumer groups, ACLs,
+# configs) so action-level wildcards are kept here; for a production deployment, scope this
+# down to the specific kafka-cluster:* actions AKHQ's read/admin modes actually call (see
+# https://akhq.io/docs/configuration/authorizations.html). Resources are already scoped to
+# this cluster and its topics/groups/transactional-ids only, never account-wide.
+# trivy:ignore:AVD-AWS-0057
+# kics-scan ignore-block
 data "aws_iam_policy_document" "ecs_task_msk_policy" {
   statement {
+    sid    = "AkhqClusterAdmin"
     effect = "Allow"
     actions = [
       "kafka-cluster:*",
       "kafka:*",
     ]
-    resources = ["*"]
+    resources = [
+      module.msk_cluster[0].arn,
+      "${replace(module.msk_cluster[0].arn, ":cluster/", ":topic/")}/*",
+      "${replace(module.msk_cluster[0].arn, ":cluster/", ":group/")}/*",
+      "${replace(module.msk_cluster[0].arn, ":cluster/", ":transactional-id/")}/*",
+    ]
   }
 }

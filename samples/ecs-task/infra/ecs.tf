@@ -1,3 +1,10 @@
+# Container Insights disabled to minimize CloudWatch cost on this batch/lab cluster; enable
+# cluster_settings (containerInsights = enabled) for production observability needs.
+# kics-scan ignore-block
+resource "aws_ecs_cluster" "batch" {
+  name = "${local.name}-cluster"
+}
+
 # ECS Task Definition only (Batch style)
 resource "aws_ecs_task_definition" "batch" {
   family                   = "${local.name}-task"
@@ -8,10 +15,18 @@ resource "aws_ecs_task_definition" "batch" {
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
 
+  # Graviton (ARM64) Fargate tasks: ~20% cheaper per vCPU/GB-hour than X86_64 at equivalent
+  # performance for this workload; public.ecr.aws/amazonlinux/amazonlinux publishes a
+  # multi-arch manifest so no image change is required.
+  runtime_platform {
+    cpu_architecture        = "ARM64"
+    operating_system_family = "LINUX"
+  }
+
   container_definitions = jsonencode([
     {
       name      = "batch-job"
-      image     = "public.ecr.aws/amazonlinux/amazonlinux:latest"
+      image     = "public.ecr.aws/amazonlinux/amazonlinux:2023"
       essential = true
       command   = ["echo", "Hello from ECS Task!"]
       logConfiguration = {
@@ -29,6 +44,60 @@ resource "aws_ecs_task_definition" "batch" {
 resource "aws_cloudwatch_log_group" "batch" {
   name              = "/aws/ecs/${local.name}"
   retention_in_days = 1
+  kms_key_id        = aws_kms_key.logs.arn
+}
+
+# Root-account administrator statement is the AWS-documented baseline for every KMS key
+# policy (a key with no root grant can permanently lock the account out of its own key);
+# kms:* is scoped to this account's root principal only, not a public/anonymous wildcard.
+# kics-scan ignore-block
+resource "aws_kms_key" "logs" {
+  description         = "CMK for CloudWatch Logs encryption - ${local.name}"
+  enable_key_rotation = true
+  policy              = data.aws_iam_policy_document.logs_kms.json
+}
+
+resource "aws_kms_alias" "logs" {
+  name          = "alias/${local.name}-logs"
+  target_key_id = aws_kms_key.logs.key_id
+}
+
+data "aws_iam_policy_document" "logs_kms" {
+  statement {
+    sid       = "AllowRootAccountAdmin"
+    effect    = "Allow"
+    actions   = ["kms:*"]
+    resources = ["*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+
+  statement {
+    sid    = "AllowCloudWatchLogs"
+    effect = "Allow"
+    actions = [
+      "kms:Encrypt*",
+      "kms:Decrypt*",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:Describe*",
+    ]
+    resources = ["*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["logs.${var.aws_region}.amazonaws.com"]
+    }
+
+    condition {
+      test     = "ArnLike"
+      variable = "kms:EncryptionContext:aws:logs:arn"
+      values   = ["arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*"]
+    }
+  }
 }
 
 # IAM Roles

@@ -1,0 +1,186 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  security-events: write # required to upload KICS/Trivy/Gitleaks SARIF to the Security tab
+
+env:
+  TERRAFORM_VERSION: "1.15.8"
+  TFLINT_VERSION: "v0.63.1"
+  TERRAFORM_DOCS_VERSION: "v0.24.0"
+  GITLEAKS_VERSION: "8.30.1"
+
+jobs:
+  pre-commit:
+    name: Pre-commit (fmt, tflint, docs drift, secrets)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Setup Go (for the gitleaks pre-commit hook)
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version: "1.24"
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@6e1e0642c0289bd619021bf6b34e3c08ed1e005a # v6.3.0
+        with:
+          tflint_version: ${{ env.TFLINT_VERSION }}
+
+      - name: Install terraform-docs
+        run: |
+          curl -Lo ./terraform-docs.tar.gz "https://github.com/terraform-docs/terraform-docs/releases/download/${TERRAFORM_DOCS_VERSION}/terraform-docs-${TERRAFORM_DOCS_VERSION}-$(uname)-amd64.tar.gz"
+          tar -xzf terraform-docs.tar.gz
+          chmod +x terraform-docs
+          sudo mv terraform-docs /usr/local/bin/terraform-docs
+
+      - name: Cache pre-commit environments
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit on all files
+        run: pre-commit run --all-files --show-diff-on-failure
+
+  terraform-validate:
+    name: terraform validate (${{ matrix.sample }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [base, ecs-service, ecs-task, msk-akhq, rds-aurora-pg]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - name: terraform fmt -check
+        working-directory: samples/${{ matrix.sample }}/infra
+        run: terraform fmt -check -diff
+
+      # No cloud credentials are provided to this job on purpose: this repository is public
+      # and pull_request workflows from forks never receive repository secrets, so any
+      # AWS-authenticated step here would either fail for contributors or (if forced via
+      # pull_request_target) risk exposing credentials to untrusted PR code. `init -backend=false`
+      # + `validate` catch syntax, type and module-contract errors without needing live AWS
+      # access; `terraform test` / `plan` / `apply` stay local `task` commands for maintainers
+      # who have their own credentials configured.
+      - name: terraform init (no backend, no credentials required)
+        working-directory: samples/${{ matrix.sample }}/infra
+        run: terraform init -backend=false -input=false
+
+      - name: terraform validate
+        working-directory: samples/${{ matrix.sample }}/infra
+        run: terraform validate
+
+  kics:
+    name: KICS (IaC security scan)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Run KICS scan
+        uses: checkmarx/kics-github-action@05aa5eb70eede1355220f4ca5238d96b397e30a6 # v2.1.20
+        with:
+          path: "."
+          fail_on: high,medium
+          output_path: kics-results
+          output_formats: "json,sarif"
+
+      - name: Upload KICS SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+        with:
+          sarif_file: kics-results/results.sarif
+
+  trivy:
+    name: Trivy (misconfig & vulnerability scan)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      # Report generation always succeeds, so the SARIF is uploaded to the Security tab even
+      # when findings exist; the gate is enforced separately below.
+      - name: Run Trivy config scan (SARIF report)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: "config"
+          scan-ref: "."
+          severity: "CRITICAL,HIGH"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          exit-code: "0"
+
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+        with:
+          sarif_file: trivy-results.sarif
+
+      - name: Run Trivy config scan (fail on findings)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: "config"
+          scan-ref: "."
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+
+  gitleaks:
+    name: Gitleaks (secret scanning)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0 # full history of *this* ref, so gitleaks can scan every past commit on it
+
+      - name: Install gitleaks
+        run: |
+          curl -sSLo gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar -xzf gitleaks.tar.gz gitleaks
+          sudo mv gitleaks /usr/local/bin/gitleaks
+
+      # --log-opts=HEAD restricts the scan to commits reachable from the checked-out ref.
+      # actions/checkout with fetch-depth: 0 fetches full history, and without this flag
+      # gitleaks walks every locally-known ref (git log --all), which pulls in every other
+      # branch in the repository - including ones this workflow run has no business auditing
+      # or fixing. Scoping to HEAD keeps this job to the branch actually being tested.
+      - name: Run gitleaks (SARIF report)
+        run: gitleaks detect --source . --log-opts="HEAD" --report-format sarif --report-path gitleaks-results.sarif --exit-code 0
+
+      - name: Upload Gitleaks SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0
+        with:
+          sarif_file: gitleaks-results.sarif
+
+      - name: Run gitleaks (fail on findings)
+        run: gitleaks detect --source . --log-opts="HEAD" --exit-code 1

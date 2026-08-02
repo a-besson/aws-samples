@@ -1,52 +1,53 @@
 import { Signer } from "@aws-sdk/rds-signer";
 import pg from 'pg';
 import fs from 'fs';
-import path from 'path';
 
-export const handler = async (event) => {
-    const result = await dbOps();
-    const response = {
-      statusCode: 200,
-      body: JSON.stringify('Hello from Lambda!'),
-    };
-    return response;
+// Populated by the Lambda's Terraform wiring (environment block), never hardcoded:
+// DB_HOST = aurora_master cluster endpoint, DB_USER = master_username, DB_NAME = database_name.
+const DB_HOST = process.env.DB_HOST;
+const DB_USER = process.env.DB_USER;
+const DB_NAME = process.env.DB_NAME || "postgres";
+const DB_PORT = 5432;
+const CA_BUNDLE = fs.readFileSync(new URL("./rds-ca-2019-root.pem", import.meta.url));
+
+export const handler = async () => {
+  const result = await dbOps();
+  return {
+    statusCode: 200,
+    body: JSON.stringify(result.rows),
   };
+};
 
 async function createAuthToken() {
-  // Define connection authentication parameters
-  const dbinfo = {
-    hostname: "lab-aws-samples-postgresql.cluster-c9mwk8cswsm7.eu-west-3.rds.amazonaws.com",
-    port: 5432,
-    username: "adminpg",
+  const signer = new Signer({
+    hostname: DB_HOST,
+    port: DB_PORT,
+    username: DB_USER,
     region: process.env.AWS_REGION,
-  }
+  });
 
-  // Create RDS Signer object
-  const signer = new Signer(dbinfo);
-
-  // Request authorization token from RDS, specifying the username
-  const token = await signer.getAuthToken();
-  return token;
+  return signer.getAuthToken();
 }
 
 async function dbOps() {
-
   const token = await createAuthToken();
-  console.log(token)
-  // Define connection configuration
+
   const client = new pg.Client({
-    user: "adminpg",
-    host: "lab-aws-samples-postgresql.cluster-c9mwk8cswsm7.eu-west-3.rds.amazonaws.com",
-    database: "postgres",
+    user: DB_USER,
+    host: DB_HOST,
+    database: DB_NAME,
     password: token,
-    port: 5432,
-    ssl: 'no-verify'
+    port: DB_PORT,
+    ssl: {
+      ca: CA_BUNDLE,
+      rejectUnauthorized: true,
+    },
   });
 
-    await client.connect();
-    var res = await client.query("SELECT * FROM pg_roles;");
-    console.log(res);
-    client.end();
-  return res;
-
+  await client.connect();
+  try {
+    return await client.query("SELECT * FROM pg_roles;");
+  } finally {
+    await client.end();
+  }
 }

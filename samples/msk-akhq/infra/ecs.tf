@@ -1,5 +1,13 @@
+# IAM Access Analyzer is an account/region-wide control, enabled once for the whole account
+# by samples/base/infra/access_analyzer.tf; it does not need a second instance per sample.
+# kics-scan ignore-block
+resource "random_password" "akhq_admin" {
+  length  = 24
+  special = false
+}
+
 locals {
-  image_name = "${data.aws_caller_identity.current.account_id}.dkr.ecr.eu-west-3.amazonaws.com/kafka/akhq:latest"
+  image_name = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/kafka/akhq:latest"
 
   akhq_config = <<-EOT
     micronaut:
@@ -10,7 +18,7 @@ locals {
         default-group: no-roles
         basic-auth:
           - username: admin
-            password: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8" # echo -n "password" | sha256sum # gitleaks:allow
+            password: "${sha256(random_password.akhq_admin.result)}"
             groups:
               - admin
       connections:
@@ -24,7 +32,9 @@ locals {
     EOT
 }
 
-# kics-scan ignore-block  ECS Cluster with Container Insights Disabled
+# Container Insights disabled to minimize CloudWatch cost on this lab cluster; set
+# `cluster_settings` (containerInsights = enabled) for production use.
+# kics-scan ignore-block
 resource "aws_ecs_cluster" "app" {
   name = "app-ecs-cluster"
 }
@@ -172,10 +182,64 @@ resource "aws_appautoscaling_policy" "down" {
   depends_on = [aws_appautoscaling_target.target]
 }
 
-# kics-scan ignore-block  CloudWatch Log Group Without KMS
 resource "aws_cloudwatch_log_group" "ecs_log" {
   name              = "/ecs/${local.name}-container-log"
   retention_in_days = 1
+  kms_key_id        = aws_kms_key.logs.arn
 
   tags = local.tags
+}
+
+# Root-account administrator statement is the AWS-documented baseline for every KMS key
+# policy (a key with no root grant can permanently lock the account out of its own key);
+# kms:* is scoped to this account's root principal only, not a public/anonymous wildcard.
+# kics-scan ignore-block
+resource "aws_kms_key" "logs" {
+  description         = "CMK for CloudWatch Logs encryption - ${local.name}"
+  enable_key_rotation = true
+  policy              = data.aws_iam_policy_document.logs_kms.json
+  tags                = local.tags
+}
+
+resource "aws_kms_alias" "logs" {
+  name          = "alias/${local.name}-logs"
+  target_key_id = aws_kms_key.logs.key_id
+}
+
+data "aws_iam_policy_document" "logs_kms" {
+  statement {
+    sid       = "AllowRootAccountAdmin"
+    effect    = "Allow"
+    actions   = ["kms:*"]
+    resources = ["*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+
+  statement {
+    sid    = "AllowCloudWatchLogs"
+    effect = "Allow"
+    actions = [
+      "kms:Encrypt*",
+      "kms:Decrypt*",
+      "kms:ReEncrypt*",
+      "kms:GenerateDataKey*",
+      "kms:Describe*",
+    ]
+    resources = ["*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["logs.${var.aws_region}.amazonaws.com"]
+    }
+
+    condition {
+      test     = "ArnLike"
+      variable = "kms:EncryptionContext:aws:logs:arn"
+      values   = ["arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*"]
+    }
+  }
 }

@@ -106,7 +106,7 @@ tasks:
   scan:kics:
     desc: "Exécute le scan de sécurité IaC avec KICS via Podman."
     cmds:
-      - podman run --rm -v $(pwd):/path checkmarx/kics scan -p /path -o /path/kics-results.json --ignore-on-exit results
+      - podman run --rm -v $(pwd):/path checkmarx/kics:v2.1.20 scan -p /path -o /path/kics-results.json --ignore-on-exit results
 
   init:
     desc: "Configuration complète du projet : installation des dépendances système, skills IA et création du bucket de state."
