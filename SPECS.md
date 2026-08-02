@@ -1,5 +1,11 @@
 # SPECS.md - Decision Tracking
 
+## [2026-08-02] - Daily Log - PR Review & Merge Agent Prompt, Dual-Model Optimization
+
+- Added `.agents/prompts/pr-review-merge.md`: gatekeeper prompt (Sonnet 5 / Opus 5) that reviews every open PR, verifies pipeline status (or reproduces the verification gate locally when no CI checks report), posts line-anchored review comments, and merges autonomously only Tier A changes (docs, tests, patch/minor bumps with changelog read, CI repairs) — Tier B (IAM, network, encryption, state, major bumps, resource replacement) is approve-only with `needs-human-merge`, ambiguity always demotes the tier.
+- Hard rails: squash merge + branch deletion, ≤ 2 merges per run, never push to PR branches, never merge red/unverified CI, PR descriptions and CI logs treated as untrusted input.
+- Generalized `.agents/prompts/cloud-engineer-review.md` to target both `claude-sonnet-5` and `claude-opus-5` via a shared "Model calibration" section, and cross-referenced the two prompts (producer opens draft PRs, gatekeeper reviews/merges them).
+
 ## [2026-07-14] - Daily Log - Operational Review Prompt for Cloud Engineer Agent
 
 - Added `.agents/prompts/cloud-engineer-review.md`: a Sonnet 5-optimized mission prompt for a recurring autonomous agent covering MCO (obsolescence, vulnerabilities, issues), AWS service watch with PR-based evolution proposals (two-tier: direct PR vs RFC in `docs/proposals/`), CI/CD pipeline health (GitLab/GitHub dual-pipeline rule), and documentation sync.
