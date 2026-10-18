@@ -29,9 +29,13 @@ crane cp tchiotludo/akhq:latest **********.dkr.ecr.eu-west-3.amazonaws.com/kafka
 ```
 
 ### 2. Deploy Infrastructure
+Set `TF_VAR_acm_certificate_arn` (ACM certificate of the HTTPS listener) in the root `.env`, see `.env.example`.
+The AKHQ admin password is generated; read it with `terraform -chdir=infra output -raw akhq_admin_password`.
+
 ```bash
-# Initialize and apply
-task apply
+# Initialize (needs TF_VAR_state_bucket in the root .env) and apply, from the repository root
+task msk-akhq:init
+task msk-akhq:apply
 ```
 
 ### 3. Access AKHQ
@@ -39,6 +43,27 @@ The UI will be available at the ALB hostname provided in the outputs.
 
 ---
  Linda
+
+## Tests
+
+```bash
+# terraform test on a throwaway Floci container (fake credentials, no AWS account), from the repository root
+task msk-akhq:test
+```
+
+The test applies the stack on the emulator (`infra/tests/floci.tftest.hcl`); the gaps of the emulator are mocked in the
+test file with the reason as a comment. CI runs it on every pull request (`build-msk-akhq`).
+
+## Task commands
+
+| Command | Description |
+|---|---|
+| `task msk-akhq:init` | Initialize Terraform with the shared S3 state bucket |
+| `task msk-akhq:plan` | Plan the changes |
+| `task msk-akhq:apply` | Apply the changes |
+| `task msk-akhq:destroy` | Destroy the resources |
+| `task msk-akhq:test` | `terraform test` on Floci |
+| `task msk-akhq:docs` | Regenerate the Terraform documentation |
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

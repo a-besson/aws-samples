@@ -7,6 +7,7 @@ python/
 
 # Local .terraform directories
 **/.terraform/*
+# Provider lock files are not versioned: the providers are pinned exactly instead
 **/.terraform.lock*
 plan.out
 plan.json
@@ -44,3 +45,15 @@ override.tf.json
 terraform.rc
 # Husky
 .husky/_/
+
+# Local environment (state bucket name, AWS profile), see .env.example
+.env
+
+# OSX
+.DS_Store
+
+# Task cache
+.task/
+
+# KICS output
+kics-results.json

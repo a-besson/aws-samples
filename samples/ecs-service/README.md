@@ -12,14 +12,36 @@
 ## Quick Start
 
 ```bash
-# Initialize and apply
-task apply
+# Initialize (needs TF_VAR_state_bucket in the root .env) and apply, from the repository root
+task ecs-service:init
+task ecs-service:apply
 
 # Destroy
-task destroy
+task ecs-service:destroy
 ```
 
 ---
+## Tests
+
+```bash
+# terraform test on a throwaway Floci container (fake credentials, no AWS account), from the repository root
+task ecs-service:test
+```
+
+The test applies the stack on the emulator (`infra/tests/floci.tftest.hcl`); the gaps of the emulator are mocked in the
+test file with the reason as a comment. CI runs it on every pull request (`build-ecs-service`).
+
+## Task commands
+
+| Command | Description |
+|---|---|
+| `task ecs-service:init` | Initialize Terraform with the shared S3 state bucket |
+| `task ecs-service:plan` | Plan the changes |
+| `task ecs-service:apply` | Apply the changes |
+| `task ecs-service:destroy` | Destroy the resources |
+| `task ecs-service:test` | `terraform test` on Floci |
+| `task ecs-service:docs` | Regenerate the Terraform documentation |
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

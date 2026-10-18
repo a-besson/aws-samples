@@ -13,20 +13,42 @@
 
 ### 1. Provision
 ```bash
-# Initialize and apply
-task apply
+# Initialize (needs TF_VAR_state_bucket in the root .env) and apply, from the repository root
+task ecs-task:init
+task ecs-task:apply
 ```
 
 ### 2. Run Task
-You can launch the task using the pre-configured `task run` command, which leverages the AWS CLI to execute the task in Fargate.
+You can launch the task using the pre-configured `task ecs-task:run` command, which leverages the AWS CLI to execute the task in Fargate.
 
 ```bash
 # Execute the task on AWS
-task run
+task ecs-task:run
 ```
 
 > [!TIP]
 > This command will automatically fetch the necessary ARNs and Subnet IDs from the Terraform outputs to launch the task in your VPC.
+
+## Tests
+
+```bash
+# terraform test on a throwaway Floci container (fake credentials, no AWS account), from the repository root
+task ecs-task:test
+```
+
+The test applies the stack on the emulator (`infra/tests/floci.tftest.hcl`); the gaps of the emulator are mocked in the
+test file with the reason as a comment. CI runs it on every pull request (`build-ecs-task`).
+
+## Task commands
+
+| Command | Description |
+|---|---|
+| `task ecs-task:init` | Initialize Terraform with the shared S3 state bucket |
+| `task ecs-task:plan` | Plan the changes |
+| `task ecs-task:apply` | Apply the changes |
+| `task ecs-task:destroy` | Destroy the resources |
+| `task ecs-task:test` | `terraform test` on Floci |
+| `task ecs-task:docs` | Regenerate the Terraform documentation |
 
 ---
 
