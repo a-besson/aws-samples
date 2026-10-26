@@ -1,0 +1,23 @@
+name: build-rds-aurora-pg
+
+on:
+  pull_request:
+    paths:
+      - "samples/rds-aurora-pg/**"
+      - "Taskfile.yml"
+      - ".tflint.hcl"
+      - ".github/workflows/_build-sample.yml"
+      - ".github/workflows/build-rds-aurora-pg.yml"
+
+concurrency:
+  group: build-rds-aurora-pg-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build-sample.yml
+    with:
+      sample: rds-aurora-pg

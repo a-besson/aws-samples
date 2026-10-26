@@ -1,14 +1,84 @@
+# Mirror of the GitHub Actions workflows (.github/workflows): offline checks only, no cloud credentials, no deploy.
+# `terraform test` on Floci runs on GitHub Actions only: the emulator needs the Docker socket of the runner.
 stages:
   - quality
   - build
-  - deploy
 
-include:
-  - local: vpc/.gitlab-ci.yml
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
-lint:
-  stage: quality
-  image: zenika/terraform-aws-cli
+.samples:
+  parallel:
+    matrix:
+      - SAMPLE: [base, ecs-service, ecs-task, msk-akhq, rds-aurora-pg]
+
+terraform:
+  extends: .samples
+  stage: build
+  image:
+    name: docker.io/hashicorp/terraform:1.16.5
+    entrypoint: [""]
+  variables:
+    TF_PLUGIN_CACHE_DIR: $CI_PROJECT_DIR/.terraform.d/plugin-cache
+  cache:
+    key: tf-plugins-$SAMPLE
+    paths:
+      - .terraform.d/plugin-cache
+  before_script:
+    - mkdir -p "$TF_PLUGIN_CACHE_DIR"
+    - cd samples/$SAMPLE/infra
   script:
-    - terraform fmt -recursive
-    - tflint --recursive
+    - terraform fmt -check -recursive
+    - terraform init -backend=false -input=false
+    - terraform validate
+  rules:
+    - changes: ["samples/$SAMPLE/**/*", ".gitlab-ci.yml"]
+
+tflint:
+  extends: .samples
+  stage: build
+  image:
+    name: ghcr.io/terraform-linters/tflint:v0.64.0
+    entrypoint: [""]
+  script:
+    - tflint --init --config="$CI_PROJECT_DIR/.tflint.hcl"
+    - cd samples/$SAMPLE/infra && tflint --config="$CI_PROJECT_DIR/.tflint.hcl"
+  rules:
+    - changes: ["samples/$SAMPLE/**/*", ".tflint.hcl", ".gitlab-ci.yml"]
+
+pre-commit:
+  stage: quality
+  image:
+    name: ghcr.io/antonbabenko/pre-commit-terraform:v1.109.2
+    entrypoint: [""]
+  before_script:
+    # the image ships Terraform 1.16.4, the stacks pin 1.16.5: install it from the official release, checksum verified
+    - |
+      case "$(uname -m)" in aarch64) arch=arm64 ;; *) arch=amd64 ;; esac
+      base=https://releases.hashicorp.com/terraform/1.16.5
+      cd /tmp
+      curl -fsSLO "$base/terraform_1.16.5_linux_$arch.zip"
+      curl -fsSLO "$base/terraform_1.16.5_SHA256SUMS"
+      sha256sum -c --ignore-missing terraform_1.16.5_SHA256SUMS
+      unzip -o "terraform_1.16.5_linux_$arch.zip" terraform -d /usr/local/bin
+      cd "$CI_PROJECT_DIR"
+  script:
+    - pre-commit run --all-files --show-diff-on-failure
+
+kics:
+  stage: quality
+  image:
+    name: docker.io/checkmarx/kics:v2.1.20
+    entrypoint: [""]
+  script:
+    - kics scan -p "$CI_PROJECT_DIR" --config "$CI_PROJECT_DIR/kics.config" --no-progress
+
+trivy:
+  stage: quality
+  image:
+    name: docker.io/aquasec/trivy:0.70.0
+    entrypoint: [""]
+  script:
+    - trivy config --config trivy.yaml .
+    - trivy fs --config trivy.yaml --scanners vuln,secret .

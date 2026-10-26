@@ -1,0 +1,23 @@
+name: build-ecs-service
+
+on:
+  pull_request:
+    paths:
+      - "samples/ecs-service/**"
+      - "Taskfile.yml"
+      - ".tflint.hcl"
+      - ".github/workflows/_build-sample.yml"
+      - ".github/workflows/build-ecs-service.yml"
+
+concurrency:
+  group: build-ecs-service-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build-sample.yml
+    with:
+      sample: ecs-service

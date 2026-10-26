@@ -3,18 +3,19 @@ locals {
 }
 
 terraform {
-  required_version = ">= 1.9.0"
+  required_version = "1.16.5"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.70"
+      version = "5.100.0"
     }
   }
   backend "s3" {
-    bucket  = "aws-lab-tf-states"
     key     = "states/aws-lab/samples/ecs-task"
     region  = "eu-west-3"
-    encrypt = "true"
+    encrypt = true
+    # lock file in the bucket (S3 native locking); the bucket comes from `-backend-config`, see `task <ns>:init`
+    use_lockfile = true
   }
 }
 

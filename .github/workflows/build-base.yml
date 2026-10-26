@@ -1,0 +1,23 @@
+name: build-base
+
+on:
+  pull_request:
+    paths:
+      - "samples/base/**"
+      - "Taskfile.yml"
+      - ".tflint.hcl"
+      - ".github/workflows/_build-sample.yml"
+      - ".github/workflows/build-base.yml"
+
+concurrency:
+  group: build-base-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build-sample.yml
+    with:
+      sample: base

@@ -85,8 +85,21 @@ data "aws_iam_policy_document" "ecs_task_msk_policy" {
     effect = "Allow"
     actions = [
       "kafka-cluster:*",
-      "kafka:*",
     ]
-    resources = ["*"]
+    resources = [
+      module.msk_cluster[0].arn,
+      "${replace(module.msk_cluster[0].arn, ":cluster/", ":topic/")}/*",
+      "${replace(module.msk_cluster[0].arn, ":cluster/", ":group/")}/*",
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "kafka:DescribeCluster",
+      "kafka:DescribeClusterV2",
+      "kafka:GetBootstrapBrokers",
+    ]
+    resources = [module.msk_cluster[0].arn]
   }
 }

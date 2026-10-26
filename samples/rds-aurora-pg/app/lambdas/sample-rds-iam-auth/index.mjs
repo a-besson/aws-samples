@@ -15,7 +15,7 @@ export const handler = async (event) => {
 async function createAuthToken() {
   // Define connection authentication parameters
   const dbinfo = {
-    hostname: "lab-aws-samples-postgresql.cluster-c9mwk8cswsm7.eu-west-3.rds.amazonaws.com",
+    hostname: process.env.DB_HOSTNAME,
     port: 5432,
     username: "adminpg",
     region: process.env.AWS_REGION,
@@ -32,11 +32,10 @@ async function createAuthToken() {
 async function dbOps() {
 
   const token = await createAuthToken();
-  console.log(token)
   // Define connection configuration
   const client = new pg.Client({
     user: "adminpg",
-    host: "lab-aws-samples-postgresql.cluster-c9mwk8cswsm7.eu-west-3.rds.amazonaws.com",
+    host: process.env.DB_HOSTNAME,
     database: "postgres",
     password: token,
     port: 5432,
