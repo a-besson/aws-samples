@@ -19,26 +19,35 @@ Copy AKHQ docker image to ECR private repository:
 
 ```bash
 # Get ECR login
-aws ecr get-login-password --region eu-west-3 | docker login --username AWS --password-stdin **********.dkr.ecr.eu-west-3.amazonaws.com
+aws ecr get-login-password --region eu-west-3 | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.eu-west-3.amazonaws.com
 
 # Create repository
 aws ecr create-repository --repository-name kafka/akhq
 
 # Copy image (using crane)
-crane cp tchiotludo/akhq:latest **********.dkr.ecr.eu-west-3.amazonaws.com/kafka/akhq:latest
+crane cp tchiotludo/akhq:latest <AWS_ACCOUNT_ID>.dkr.ecr.eu-west-3.amazonaws.com/kafka/akhq:latest
 ```
 
 ### 2. Deploy Infrastructure
 ```bash
+# Provide your own ACM certificate ARN for the ALB HTTPS listener
+export TF_VAR_acm_certificate_arn="arn:aws:acm:eu-west-3:<AWS_ACCOUNT_ID>:certificate/<CERTIFICATE_ID>"
+
 # Initialize and apply
 task apply
 ```
 
 ### 3. Access AKHQ
-The UI will be available at the ALB hostname provided in the outputs.
+The UI will be available at the ALB hostname provided in the outputs. Retrieve the
+generated `admin` password with:
+
+```bash
+terraform -chdir=infra output -raw akhq_admin_password
+```
+
+See [TFDOCS](./infra/TFDOCS.md) for the full list of inputs, outputs and resources.
 
 ---
- Linda
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
