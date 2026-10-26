@@ -1,5 +1,9 @@
 # SPECS.md - Decision Tracking
 
+## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
+
+- Removed `.agents/prompts/` (`cloud-engineer-review.md`, `pr-review-merge.md`) and `.vscode/settings.json`: not needed in this repository. Earlier entries below remain as history.
+
 ## [2026-10-11] - Daily Log - Global rules applied: GitHub Actions CI, Terraform tests on Floci, pinned versions, partial S3 backend
 
 - **ci**: `.github/workflows` (`_build-sample` + one `build-<sample>`, `check-cyber`, `check-quality` with CodeQL), pull requests only, actions pinned by SHA, no cloud credentials; `.gitlab-ci.yml` rewritten as a mirror (it included a missing file and had a deploy stage), `terraform test` on Floci stays GitHub-only; `renovate.json` keeps digests and the Floci image
