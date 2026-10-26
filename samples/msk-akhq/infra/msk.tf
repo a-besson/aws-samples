@@ -2,7 +2,7 @@
 module "msk_cluster" {
   count   = 1
   source  = "terraform-aws-modules/msk-kafka-cluster/aws"
-  version = "2.5.0"
+  version = "2.13.1"
 
   name = local.name
 

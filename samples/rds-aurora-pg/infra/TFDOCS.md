@@ -14,14 +14,14 @@
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | 5.100.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.8.1 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.9.0 |
 | <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_aurora_master"></a> [aurora\_master](#module\_aurora\_master) | terraform-aws-modules/rds-aurora/aws | 9.11.0 |
+| <a name="module_aurora_master"></a> [aurora\_master](#module\_aurora\_master) | terraform-aws-modules/rds-aurora/aws | 9.16.1 |
 
 ## Resources
 

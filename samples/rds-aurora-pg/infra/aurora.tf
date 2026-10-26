@@ -16,7 +16,7 @@ data "aws_rds_engine_version" "postgresql" {
 
 module "aurora_master" {
   source  = "terraform-aws-modules/rds-aurora/aws"
-  version = "9.11.0"
+  version = "9.16.1"
 
   name              = "${local.name}-postgresql"
   engine            = "aurora-postgresql"
