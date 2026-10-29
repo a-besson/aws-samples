@@ -1,0 +1,10 @@
+# Trivy shared configuration (used by `task trivy` and the CI workflow).
+severity:
+  - HIGH
+  - CRITICAL
+exit-code: 1
+scan:
+  # Downloaded provider binaries and dependencies are not repository dependencies
+  skip-dirs:
+    - "**/.terraform"
+    - "**/node_modules"

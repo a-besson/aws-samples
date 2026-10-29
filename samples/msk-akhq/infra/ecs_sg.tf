@@ -9,13 +9,15 @@ resource "aws_security_group" "lb" {
   vpc_id      = local.states.vpc.vpc_id
 
   ingress {
-    description = "Allow incoming HTTP traffic"
+    description = "Allow incoming HTTPS traffic"
     protocol    = "tcp"
-    from_port   = local.app_port
-    to_port     = local.app_port
+    from_port   = 443
+    to_port     = 443
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # The sample pulls its image and reaches MSK and AWS APIs: egress is left open, ingress is what is restricted.
+  #trivy:ignore:AWS-0104:exp:2027-01-31
   egress {
     description = "Outbound all"
     protocol    = "-1"
@@ -42,6 +44,8 @@ resource "aws_security_group" "ecs_tasks" {
     security_groups = [aws_security_group.lb.id]
   }
 
+  # The sample pulls its image and reaches MSK and AWS APIs: egress is left open, ingress is what is restricted.
+  #trivy:ignore:AWS-0104:exp:2027-01-31
   egress {
     description = "Outbound all"
     protocol    = "-1"

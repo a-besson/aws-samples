@@ -1,38 +1,42 @@
-version: '3'
+version: "3"
 
 tasks:
   init:
-    desc: "Initialize Terraform"
+    desc: Initialize Terraform with the shared S3 state bucket (TF_VAR_state_bucket from .env), migrating an older backend config
     dir: infra
+    preconditions:
+      - sh: test -n "${TF_VAR_state_bucket:-}"
+        msg: Set TF_VAR_state_bucket in .env (see .env.example)
     cmds:
-      - terraform init
+      - terraform init -input=false -migrate-state -backend-config="bucket=${TF_VAR_state_bucket}"
 
   plan:
-    desc: "Plan Terraform changes"
+    desc: Plan Terraform changes
     dir: infra
     cmds:
       - terraform plan
 
   apply:
-    desc: "Apply Terraform changes"
+    desc: Apply Terraform changes
     dir: infra
     cmds:
       - terraform apply --auto-approve
 
   destroy:
-    desc: "Destroy Terraform resources"
+    desc: Destroy Terraform resources
     dir: infra
     cmds:
       - terraform destroy --auto-approve
 
   test:
-    desc: "Run Terraform tests"
-    dir: infra
+    desc: Apply the stack on a throwaway Floci container with `terraform test` (no AWS account)
     cmds:
-      - terraform test || echo "No tests defined"
+      - task: :tf-floci-test
+        vars:
+          TF_DIR: "{{.TASKFILE_DIR}}/infra"
 
   docs:
-    desc: "Generate Terraform documentation"
+    desc: Generate Terraform documentation
     dir: infra
     cmds:
       - terraform-docs markdown table --output-file TFDOCS.md --output-mode inject .

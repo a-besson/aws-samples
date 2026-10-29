@@ -1,3 +1,8 @@
+resource "random_password" "akhq_admin" {
+  length  = 24
+  special = false
+}
+
 locals {
   image_name = "${data.aws_caller_identity.current.account_id}.dkr.ecr.eu-west-3.amazonaws.com/kafka/akhq:latest"
 
@@ -10,7 +15,7 @@ locals {
         default-group: no-roles
         basic-auth:
           - username: admin
-            password: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8" # echo -n "password" | sha256sum # gitleaks:allow
+            password: "${sha256(random_password.akhq_admin.result)}"
             groups:
               - admin
       connections:

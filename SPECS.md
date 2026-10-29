@@ -1,5 +1,19 @@
 # SPECS.md - Decision Tracking
 
+## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
+
+- Removed `.agents/prompts/` (`cloud-engineer-review.md`, `pr-review-merge.md`) and `.vscode/settings.json`: not needed in this repository. Earlier entries below remain as history.
+
+## [2026-10-11] - Daily Log - Global rules applied: GitHub Actions CI, Terraform tests on Floci, pinned versions, partial S3 backend
+
+- **ci**: `.github/workflows` (`_build-sample` + one `build-<sample>`, `check-cyber`, `check-quality` with CodeQL), pull requests only, actions pinned by SHA, no cloud credentials; `.gitlab-ci.yml` rewritten as a mirror (it included a missing file and had a deploy stage), `terraform test` on Floci stays GitHub-only; `renovate.json` keeps digests and the Floci image
+- **tests**: `plan` tests against the real provider replaced by `tests/floci.tftest.hcl` per stack (apply on Floci, fake credentials); former assertions targeted attributes that do not exist; emulator gaps mocked in the test files; `FLOCI_IMAGE` pinned once in the root Taskfile
+- **terraform**: `required_version`, `aws`, `random` and the security-group module pinned exactly; `validation` on every variable; S3 backend with `use_lockfile` and a partial config (bucket from `TF_VAR_state_bucket`, `.env` git-ignored, `.env.example`); remote-state key `states/aws-lab/vpc` corrected to `states/aws-lab/base`
+- **tooling**: `.tflint.hcl`, `kics.config`, `trivy.yaml`, `Brewfile`; pre-commit hooks bumped (`detect-private-key`, tflint config); Taskfile rebuilt with one include per sample (the old `terraform-cmd` dispatch could not work), `test || echo` removed (it swallowed failures), `skills` task removed
+- **security**: real ACM certificate ARN (with an account ID) of the ALB replaced by the `acm_certificate_arn` variable, hardcoded AKHQ password hash by a generated `random_password` (names aligned with branch `claude/aws-samples-mco-review-jy1k9j`), wildcard MSK IAM policy scoped to the cluster, ALB TLS policy and invalid-header dropping fixed, S3 public access block and `ENCRYPTED_VOLUMES` Config rule added, hardcoded RDS endpoint and token log removed from the Lambda sample, `fast-xml-parser` CVEs fixed in its lock file; remaining Trivy findings ignored inline with reason and expiry; KICS and Trivy are green
+- **agents**: vendored `.agents/skills` removed (skills are global), `AGENTS.md` reduced to repo-specific rules
+- **docs**: root and sample READMEs (links, commands, CI, tests); `.DS_Store` untracked and ignored
+
 ## [2026-08-02] - Daily Log - PR Review & Merge Agent Prompt, Dual-Model Optimization
 
 - Added `.agents/prompts/pr-review-merge.md`: gatekeeper prompt (Sonnet 5 / Opus 5) that reviews every open PR, verifies pipeline status (or reproduces the verification gate locally when no CI checks report), posts line-anchored review comments, and merges autonomously only Tier A changes (docs, tests, patch/minor bumps with changelog read, CI repairs) — Tier B (IAM, network, encryption, state, major bumps, resource replacement) is approve-only with `needs-human-merge`, ambiguity always demotes the tier.

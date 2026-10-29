@@ -12,14 +12,39 @@
 ## Quick Start
 
 ```bash
-# Initialize and apply
-task apply
+# Initialize (needs TF_VAR_state_bucket in the root .env) and apply, from the repository root
+task rds-aurora-pg:init
+task rds-aurora-pg:apply
 
 # Destroy
-task destroy
+task rds-aurora-pg:destroy
 ```
 
 ---
+The sample Lambda in `app/lambdas/sample-rds-iam-auth` reads the cluster endpoint from the `DB_HOSTNAME` environment
+variable; set it from the `cluster_endpoint` of your own deployment.
+
+## Tests
+
+```bash
+# terraform test on a throwaway Floci container (fake credentials, no AWS account), from the repository root
+task rds-aurora-pg:test
+```
+
+The test applies the stack on the emulator (`infra/tests/floci.tftest.hcl`); the gaps of the emulator are mocked in the
+test file with the reason as a comment. CI runs it on every pull request (`build-rds-aurora-pg`).
+
+## Task commands
+
+| Command | Description |
+|---|---|
+| `task rds-aurora-pg:init` | Initialize Terraform with the shared S3 state bucket |
+| `task rds-aurora-pg:plan` | Plan the changes |
+| `task rds-aurora-pg:apply` | Apply the changes |
+| `task rds-aurora-pg:destroy` | Destroy the resources |
+| `task rds-aurora-pg:test` | `terraform test` on Floci |
+| `task rds-aurora-pg:docs` | Regenerate the Terraform documentation |
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

@@ -1,0 +1,84 @@
+# Reusable build for one Terraform sample: lint, syntax check and offline tests.
+# No cloud credentials: `terraform test` applies the stack on the Floci emulator with fake credentials
+# (never planned or applied on a real account). Same container as the local `task <sample>:test`.
+name: build-sample
+
+on:
+  workflow_call:
+    inputs:
+      sample:
+        description: Sample directory name under samples/
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: lint (${{ inputs.sample }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: samples/${{ inputs.sample }}/infra
+    env:
+      TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.terraform.d/plugin-cache
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.16.5
+      - uses: terraform-linters/setup-tflint@6ffdbaa3be476b3431f7275c26966ef32ff60337 # v6.3.2
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .terraform.d/plugin-cache
+          key: tf-plugins-${{ inputs.sample }}-${{ hashFiles(format('samples/{0}/infra/**/*.tf', inputs.sample)) }}
+          restore-keys: tf-plugins-${{ inputs.sample }}-
+      - name: Prepare plugin cache
+        working-directory: ${{ github.workspace }}
+        run: mkdir -p "$TF_PLUGIN_CACHE_DIR"
+      - name: Lint - terraform fmt
+        run: terraform fmt -check -recursive
+      - name: Syntax - terraform init (no backend)
+        run: terraform init -backend=false -input=false
+      - name: Syntax - terraform validate
+        run: terraform validate
+      - name: Lint - tflint
+        run: |
+          tflint --init --config="$GITHUB_WORKSPACE/.tflint.hcl"
+          tflint --config="$GITHUB_WORKSPACE/.tflint.hcl"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+  terraform-test:
+    name: terraform-test (${{ inputs.sample }})
+    needs: lint
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: samples/${{ inputs.sample }}/infra
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.16.5
+          terraform_wrapper: false
+      # Same container as `task <sample>:test`; the image is the one pinned in the root Taskfile.
+      - name: Floci - start the emulator
+        working-directory: ${{ github.workspace }}
+        run: |
+          IMAGE="$(sed -n 's#^ *FLOCI_IMAGE: \(.*\)$#\1#p' Taskfile.yml | head -n 1)"
+          docker run -d --name floci -p 4566:4566 -e FLOCI_RUN_AS_ROOT=true \
+            -v /var/run/docker.sock:/var/run/docker.sock "$IMAGE"
+          for _ in $(seq 1 60); do curl -sf http://localhost:4566/_floci/health >/dev/null && exit 0; sleep 1; done
+          docker logs floci
+          exit 1
+      - name: Tests - terraform test (fake credentials, Floci only)
+        run: |
+          terraform init -backend=false -input=false
+          terraform test
+      - name: Floci - logs
+        if: failure()
+        run: docker logs floci

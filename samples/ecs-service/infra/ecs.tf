@@ -36,6 +36,8 @@ module "ecs_cluster" {
   }
 }
 
+# The task pulls its image and reaches AWS APIs through the VPC: egress is left open, ingress is what is restricted.
+#trivy:ignore:AWS-0104:exp:2027-01-31
 module "ecs_service" {
   source  = "terraform-aws-modules/ecs/aws//modules/service"
   version = "5.12.1"

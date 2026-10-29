@@ -1,0 +1,23 @@
+name: build-msk-akhq
+
+on:
+  pull_request:
+    paths:
+      - "samples/msk-akhq/**"
+      - "Taskfile.yml"
+      - ".tflint.hcl"
+      - ".github/workflows/_build-sample.yml"
+      - ".github/workflows/build-msk-akhq.yml"
+
+concurrency:
+  group: build-msk-akhq-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build-sample.yml
+    with:
+      sample: msk-akhq
