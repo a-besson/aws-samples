@@ -30,8 +30,9 @@ override_data {
   target = data.terraform_remote_state.vpc
   values = {
     outputs = {
-      vpc_id             = "vpc-00000000"
-      subnets_public_ids = ["subnet-00000000"]
+      vpc_id                         = "vpc-00000000"
+      subnets_public_ids             = ["subnet-00000000"]
+      ecr_public_pull_through_prefix = "ecr-public"
     }
   }
 }
@@ -47,6 +48,11 @@ run "apply_on_floci" {
   assert {
     condition     = aws_cloudwatch_log_group.batch.retention_in_days == 1
     error_message = "The batch log group must keep logs one day"
+  }
+
+  assert {
+    condition     = startswith(jsondecode(aws_ecs_task_definition.batch.container_definitions)[0].image, "000000000000.dkr.ecr.eu-west-3.amazonaws.com/ecr-public/amazonlinux/amazonlinux:")
+    error_message = "The batch image must come through the ECR Public pull through cache"
   }
 
   assert {

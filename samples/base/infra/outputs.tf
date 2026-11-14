@@ -49,3 +49,9 @@ output "vpc_endpoint_sg_id" {
   value       = module.vpc_endpoints.security_group_id
   description = "VPC endpoint security group ID"
 }
+
+# ECR
+output "ecr_public_pull_through_prefix" {
+  value       = aws_ecr_pull_through_cache_rule.ecr_public.ecr_repository_prefix
+  description = "Repository prefix of the ECR Public pull through cache (image URI: ACCOUNT.dkr.ecr.REGION.amazonaws.com/PREFIX/REPOSITORY:TAG)"
+}

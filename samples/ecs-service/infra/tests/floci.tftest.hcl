@@ -32,9 +32,10 @@ override_data {
   target = data.terraform_remote_state.vpc
   values = {
     outputs = {
-      vpc_id              = "vpc-default-eu-west-3"
-      vpc_cidr            = "172.31.0.0/16"
-      subnets_private_ids = ["subnet-default-eu-west-3-a"]
+      vpc_id                         = "vpc-default-eu-west-3"
+      vpc_cidr                       = "172.31.0.0/16"
+      subnets_private_ids            = ["subnet-default-eu-west-3-a"]
+      ecr_public_pull_through_prefix = "ecr-public"
     }
   }
 }

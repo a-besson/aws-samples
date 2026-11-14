@@ -13,6 +13,22 @@
   96 $/month for 3 AZs (eu-west-3). Set `enable_interface_endpoints = false` (`TF_VAR_enable_interface_endpoints`)
   to drop them when no ECS sample is deployed: their tasks can then no longer pull images or send logs.
 
+### Container images (ECR pull through cache)
+- **ECR Public cache**: a pull through cache rule (`ecr-public` → `public.ecr.aws`) lets the ECS samples pull public
+  images from the private registry, through the endpoints above, without a NAT gateway. Their image URI is
+  `<account>.dkr.ecr.<region>.amazonaws.com/ecr-public/<public repository>:<tag>@<digest>`. The cached repositories
+  are created on the first pull and use the default AES-256 encryption, since they only hold public images.
+- **Warm up each image once before deploying an ECS sample**: AWS documents that the first pull through a PrivateLink
+  endpoint may need a route to the internet, which the private subnets do not have. Pull from the workstation for the
+  platform of Fargate, then check that the cached digest is the one pinned in the stack:
+
+```bash
+aws ecr get-login-password --region eu-west-3 | podman login --username AWS --password-stdin **********.dkr.ecr.eu-west-3.amazonaws.com
+podman pull --platform linux/amd64 **********.dkr.ecr.eu-west-3.amazonaws.com/ecr-public/nginx/nginx:1.30.6
+podman pull --platform linux/amd64 **********.dkr.ecr.eu-west-3.amazonaws.com/ecr-public/amazonlinux/amazonlinux:2023.12.20261102.0
+crane digest **********.dkr.ecr.eu-west-3.amazonaws.com/ecr-public/nginx/nginx:1.30.6   # must match ecs-service/infra/ecs.tf
+```
+
 ### Governance (AWS Config)
 - **Configuration Recorder**: Records all configuration changes.
 - **Continuous Monitoring**: Real-time tracking of resource changes.

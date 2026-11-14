@@ -11,6 +11,9 @@
 
 ## Quick Start
 
+Its image comes from the ECR Public pull through cache of `base`: warm it up once before the first apply
+(see [base](../base/README.md#container-images-ecr-pull-through-cache)).
+
 ### 1. Provision
 ```bash
 # Initialize (needs TF_VAR_state_bucket in the root .env) and apply, from the repository root

@@ -18,6 +18,7 @@ provider "aws" {
 
   endpoints {
     ec2           = var.floci_endpoint
+    ecr           = var.floci_endpoint
     iam           = var.floci_endpoint
     rds           = var.floci_endpoint
     s3            = var.floci_endpoint
@@ -58,6 +59,11 @@ run "apply_on_floci" {
   assert {
     condition     = length(module.vpc_endpoints.endpoints["ecr_dkr"].subnet_ids) == 1 && !contains(keys(module.vpc_endpoints.endpoints), "rds")
     error_message = "Interface endpoints must sit in a single private subnet, without the unused rds endpoint"
+  }
+
+  assert {
+    condition     = output.ecr_public_pull_through_prefix == "ecr-public"
+    error_message = "The ECR Public pull through cache rule was not created"
   }
 
   assert {

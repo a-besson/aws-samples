@@ -32,6 +32,7 @@
 | [aws_config_configuration_recorder_status.config_recorder_status](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/config_configuration_recorder_status) | resource |
 | [aws_config_delivery_channel.delivery](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/config_delivery_channel) | resource |
 | [aws_config_remediation_configuration.remediation_sg](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/config_remediation_configuration) | resource |
+| [aws_ecr_pull_through_cache_rule.ecr_public](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/ecr_pull_through_cache_rule) | resource |
 | [aws_iam_role.config_role](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/iam_role) | resource |
 | [aws_iam_role.ssm_role](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy.security_group_policy](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/iam_role_policy) | resource |
@@ -57,6 +58,7 @@
 
 | Name | Description |
 | ---- | ----------- |
+| <a name="output_ecr_public_pull_through_prefix"></a> [ecr\_public\_pull\_through\_prefix](#output\_ecr\_public\_pull\_through\_prefix) | Repository prefix of the ECR Public pull through cache (image URI: ACCOUNT.dkr.ecr.REGION.amazonaws.com/PREFIX/REPOSITORY:TAG) |
 | <a name="output_subnets_database_cidr"></a> [subnets\_database\_cidr](#output\_subnets\_database\_cidr) | Database subnets cidr |
 | <a name="output_subnets_database_ids"></a> [subnets\_database\_ids](#output\_subnets\_database\_ids) | Database subnets IDs |
 | <a name="output_subnets_database_subnet_group"></a> [subnets\_database\_subnet\_group](#output\_subnets\_database\_subnet\_group) | Database subnets group name |

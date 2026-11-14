@@ -27,7 +27,9 @@ No modules.
 | [aws_ecs_task_definition.batch](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/ecs_task_definition) | resource |
 | [aws_iam_role.ecs_task_execution_role](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/iam_role) | resource |
 | [aws_iam_role.ecs_task_role](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy.ecs_task_execution_pull_through_cache](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/iam_role_policy) | resource |
 | [aws_iam_role_policy_attachment.ecs_task_execution_role_policy](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/data-sources/caller_identity) | data source |
 | [terraform_remote_state.vpc](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
 
 ## Inputs
