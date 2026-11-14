@@ -1,0 +1,72 @@
+version: "3"
+
+tasks:
+  init:
+    desc: Initialize Terraform with the shared S3 state bucket (TF_VAR_state_bucket from .env), migrating an older backend config
+    dir: infra
+    preconditions:
+      - sh: test -n "${TF_VAR_state_bucket:-}"
+        msg: Set TF_VAR_state_bucket in .env (see .env.example)
+    cmds:
+      - terraform init -input=false -migrate-state -backend-config="bucket=${TF_VAR_state_bucket}"
+
+  plan:
+    desc: Plan Terraform changes
+    dir: infra
+    cmds:
+      - terraform plan
+
+  apply:
+    desc: Apply Terraform changes
+    dir: infra
+    cmds:
+      - terraform apply --auto-approve
+
+  destroy:
+    desc: Destroy Terraform resources
+    dir: infra
+    cmds:
+      - terraform destroy --auto-approve
+
+  test:
+    desc: Apply the stack on a throwaway Floci container with `terraform test`, e2e checks included (no AWS account)
+    cmds:
+      - task: :tf-floci-test
+        vars:
+          TF_DIR: "{{.TASKFILE_DIR}}/infra"
+
+  app-test:
+    desc: Lint, type-check and unit-test the Python Lambda code (offline)
+    dir: "{{.ROOT_DIR}}"
+    cmds:
+      - "{{.ROOT_DIR}}/.venv/bin/ruff check samples/lambda-kinesis/app"
+      - "{{.ROOT_DIR}}/.venv/bin/ruff format --check samples/lambda-kinesis/app"
+      - "{{.ROOT_DIR}}/.venv/bin/pyright --pythonpath {{.ROOT_DIR}}/.venv/bin/python samples/lambda-kinesis/app"
+      - "{{.ROOT_DIR}}/.venv/bin/pytest samples/lambda-kinesis/app"
+
+  docs:
+    desc: Generate Terraform documentation
+    dir: infra
+    cmds:
+      - terraform-docs markdown table --output-file TFDOCS.md --output-mode inject .
+
+  e2e:
+    desc: Smoke test on the real AWS account (after `apply`, for you only) - puts one event in the stream and waits for it in the table
+    prompt: This runs against the AWS account of AWS_PROFILE and writes one record in the stream of the sample. Continue?
+    cmds:
+      - |
+        set -euo pipefail
+        STREAM="$(terraform -chdir=infra output -raw stream_name)"
+        TABLE="$(terraform -chdir=infra output -raw table_name)"
+        ID="e2e-$(date +%s)"
+        aws kinesis put-record --stream-name "$STREAM" --partition-key e2e --cli-binary-format raw-in-base64-out \
+          --data "{\"id\":\"$ID\",\"value\":42}" --query SequenceNumber --output text
+        for _ in $(seq 1 30); do
+          if [ "$(aws dynamodb get-item --table-name "$TABLE" --key "{\"pk\":{\"S\":\"$ID\"}}" --query Item.pk.S --output text)" = "$ID" ]; then
+            echo "OK: $ID is in the table $TABLE"
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "KO: $ID is not in the table $TABLE after 60 s (look at the DLQ and the function logs)" >&2
+        exit 1

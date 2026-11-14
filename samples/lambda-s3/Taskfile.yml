@@ -1,0 +1,70 @@
+version: "3"
+
+tasks:
+  init:
+    desc: Initialize Terraform with the shared S3 state bucket (TF_VAR_state_bucket from .env), migrating an older backend config
+    dir: infra
+    preconditions:
+      - sh: test -n "${TF_VAR_state_bucket:-}"
+        msg: Set TF_VAR_state_bucket in .env (see .env.example)
+    cmds:
+      - terraform init -input=false -migrate-state -backend-config="bucket=${TF_VAR_state_bucket}"
+
+  plan:
+    desc: Plan Terraform changes
+    dir: infra
+    cmds:
+      - terraform plan
+
+  apply:
+    desc: Apply Terraform changes
+    dir: infra
+    cmds:
+      - terraform apply --auto-approve
+
+  destroy:
+    desc: Destroy Terraform resources
+    dir: infra
+    cmds:
+      - terraform destroy --auto-approve
+
+  test:
+    desc: Apply the stack on a throwaway Floci container with `terraform test`, e2e checks included (no AWS account)
+    cmds:
+      - task: :tf-floci-test
+        vars:
+          TF_DIR: "{{.TASKFILE_DIR}}/infra"
+
+  app-test:
+    desc: Lint, type-check and unit-test the Python Lambda code (offline)
+    dir: "{{.ROOT_DIR}}"
+    cmds:
+      - "{{.ROOT_DIR}}/.venv/bin/ruff check samples/lambda-s3/app"
+      - "{{.ROOT_DIR}}/.venv/bin/ruff format --check samples/lambda-s3/app"
+      - "{{.ROOT_DIR}}/.venv/bin/pyright --pythonpath {{.ROOT_DIR}}/.venv/bin/python samples/lambda-s3/app"
+      - "{{.ROOT_DIR}}/.venv/bin/pytest samples/lambda-s3/app"
+
+  docs:
+    desc: Generate Terraform documentation
+    dir: infra
+    cmds:
+      - terraform-docs markdown table --output-file TFDOCS.md --output-mode inject .
+
+  e2e:
+    desc: Smoke test on the real AWS account (after `apply`, for you only) - drops a JSON file and waits for its summary
+    prompt: This runs against the AWS account of AWS_PROFILE and writes one object in the bucket of the sample. Continue?
+    cmds:
+      - |
+        set -euo pipefail
+        BUCKET="$(terraform -chdir=infra output -raw bucket_name)"
+        NAME="e2e-$(date +%s).json"
+        printf '{"id":"e2e","items":[1,2,3]}' | aws s3 cp - "s3://$BUCKET/incoming/$NAME"
+        for _ in $(seq 1 30); do
+          if aws s3api head-object --bucket "$BUCKET" --key "processed/$NAME" >/dev/null 2>&1; then
+            echo "OK: s3://$BUCKET/processed/$NAME"
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "KO: no summary under s3://$BUCKET/processed/$NAME after 60 s (look at the DLQ and the function logs)" >&2
+        exit 1

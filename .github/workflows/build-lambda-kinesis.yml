@@ -1,0 +1,27 @@
+name: build-lambda-kinesis
+
+on:
+  pull_request:
+    paths:
+      - "samples/lambda-kinesis/**"
+      - "Taskfile.yml"
+      - ".tflint.hcl"
+      - "requirements-dev.txt"
+      - "pyproject.toml"
+      - "conftest.py"
+      - ".github/workflows/_build-sample.yml"
+      - ".github/workflows/build-lambda-kinesis.yml"
+
+concurrency:
+  group: build-lambda-kinesis-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build-sample.yml
+    with:
+      sample: lambda-kinesis
+      python: true

@@ -1,4 +1,4 @@
-# Reusable build for one Terraform sample: lint, syntax check and offline tests.
+# Reusable build for one Terraform sample: lint, syntax check and offline tests, plus the Python checks of its Lambda code.
 # No cloud credentials: `terraform test` applies the stack on the Floci emulator with fake credentials
 # (never planned or applied on a real account). Same container as the local `task <sample>:test`.
 name: build-sample
@@ -10,6 +10,11 @@ on:
         description: Sample directory name under samples/
         required: true
         type: string
+      python:
+        description: Also lint and test samples/<sample>/app (Python Lambda code)
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -53,6 +58,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
+  python:
+    name: python (${{ inputs.sample }})
+    if: inputs.python
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      SAMPLE: ${{ inputs.sample }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13" # the Lambda runtime
+      - name: Syntax - install the Python tooling
+        run: python -m pip install -r requirements-dev.txt
+      - name: Lint - ruff check
+        run: ruff check "samples/$SAMPLE/app"
+      - name: Lint - ruff format
+        run: ruff format --check "samples/$SAMPLE/app"
+      - name: Syntax - pyright
+        run: pyright "samples/$SAMPLE/app"
+      - name: Tests - pytest (offline)
+        run: pytest "samples/$SAMPLE/app"
+
   terraform-test:
     name: terraform-test (${{ inputs.sample }})
     needs: lint
@@ -73,7 +101,9 @@ jobs:
         run: |
           IMAGE="$(sed -n 's#^ *FLOCI_IMAGE: \(.*\)$#\1#p' Taskfile.yml | head -n 1)"
           # loopback only: the emulator has no authentication and drives the Docker socket
+          # asynchronous Lambda retries run back to back (keep in sync with tf-floci-test)
           docker run -d --name floci -p 127.0.0.1:4566:4566 -e FLOCI_RUN_AS_ROOT=true \
+            -e FLOCI_SERVICES_LAMBDA_ASYNC_RETRY_DELAY_SECONDS=0 \
             -v /var/run/docker.sock:/var/run/docker.sock "$IMAGE"
           for _ in $(seq 1 60); do curl -sf http://localhost:4566/_floci/health >/dev/null && exit 0; sleep 1; done
           docker logs floci

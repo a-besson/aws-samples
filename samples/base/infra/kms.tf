@@ -41,6 +41,22 @@ module "kms" {
         values   = [data.aws_caller_identity.current.account_id]
       }]
     },
+    {
+      # EventBridge delivers the events that exhaust their retries to the encrypted dead letter queues of the samples
+      # (Decrypt and GenerateDataKey for the event source, as the SQS documentation describes). Not checked by Floci.
+      sid       = "EventBridgeDeadLetter"
+      actions   = ["kms:Decrypt", "kms:GenerateDataKey"]
+      resources = ["*"]
+      principals = [{
+        type        = "Service"
+        identifiers = ["events.amazonaws.com"]
+      }]
+      conditions = [{
+        test     = "StringEquals"
+        variable = "aws:SourceAccount"
+        values   = [data.aws_caller_identity.current.account_id]
+      }]
+    },
   ]
 
   tags = local.tags

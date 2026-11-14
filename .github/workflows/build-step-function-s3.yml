@@ -1,0 +1,27 @@
+name: build-step-function-s3
+
+on:
+  pull_request:
+    paths:
+      - "samples/step-function-s3/**"
+      - "Taskfile.yml"
+      - ".tflint.hcl"
+      - "requirements-dev.txt"
+      - "pyproject.toml"
+      - "conftest.py"
+      - ".github/workflows/_build-sample.yml"
+      - ".github/workflows/build-step-function-s3.yml"
+
+concurrency:
+  group: build-step-function-s3-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build-sample.yml
+    with:
+      sample: step-function-s3
+      python: true

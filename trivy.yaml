@@ -8,3 +8,4 @@ scan:
   skip-dirs:
     - "**/.terraform"
     - "**/node_modules"
+    - "**/.venv"

@@ -2,6 +2,10 @@
 builds/
 layer/
 node_modules/
+.venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
 python/
 *.zip
 

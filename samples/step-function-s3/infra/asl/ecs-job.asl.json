@@ -1,0 +1,40 @@
+{
+  "Comment": "Runs one ECS Fargate job per dropped file and waits for it to finish",
+  "StartAt": "RunJob",
+  "States": {
+    "RunJob": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::ecs:runTask.sync",
+      "Parameters": {
+        "Cluster": "${cluster_arn}",
+        "TaskDefinition": "${task_definition_arn}",
+        "LaunchType": "FARGATE",
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": { "Subnets": ${subnet_ids}, "SecurityGroups": ["${security_group_id}"], "AssignPublicIp": "DISABLED" }
+        },
+        "Overrides": {
+          "ContainerOverrides": [
+            {
+              "Name": "job",
+              "Environment": [
+                { "Name": "BUCKET", "Value.$": "$.detail.bucket.name" },
+                { "Name": "KEY", "Value.$": "$.detail.object.key" }
+              ]
+            }
+          ]
+        }
+      },
+      "TimeoutSeconds": 900,
+      "Retry": [
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 10,
+          "MaxAttempts": 2,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "End": true
+    }
+  }
+}

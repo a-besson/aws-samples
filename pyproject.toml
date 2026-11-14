@@ -1,0 +1,23 @@
+# Tool configuration only (no package): ruff, pyright and pytest for the Python code of the samples.
+# Each Lambda directory is listed once in `extraPaths` (pyright) and in `pythonpath` (pytest): the module names are unique
+# in the repository, so the directories can sit on the same path.
+
+[tool.ruff]
+target-version = "py313" # the Lambda runtime
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["s3_reader", "kinesis_consumer", "manifest_reader"] # the Lambda modules of the samples
+
+[tool.pyright]
+pythonVersion = "3.13" # the Lambda runtime
+include = ["samples"]
+extraPaths = ["samples/lambda-s3/app/lambdas/s3_reader", "samples/lambda-kinesis/app/lambdas/kinesis_consumer", "samples/step-function-s3/app/lambdas/manifest_reader"]
+
+[tool.pytest.ini_options]
+addopts = "--import-mode=importlib"
+pythonpath = ["samples/lambda-s3/app/lambdas/s3_reader", "samples/lambda-kinesis/app/lambdas/kinesis_consumer", "samples/step-function-s3/app/lambdas/manifest_reader"]
+testpaths = ["samples"]
