@@ -51,6 +51,7 @@
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_aws_profile"></a> [aws\_profile](#input\_aws\_profile) | AWS profile | `string` | `"default"` | no |
 | <a name="input_aws_region"></a> [aws\_region](#input\_aws\_region) | AWS target region | `string` | `"eu-west-3"` | no |
+| <a name="input_enable_interface_endpoints"></a> [enable\_interface\_endpoints](#input\_enable\_interface\_endpoints) | Create the interface endpoints (ECS, ECR, CloudWatch Logs) that the ECS samples need in the private subnets; false removes their hourly cost when no ECS sample is deployed | `bool` | `true` | no |
 
 ## Outputs
 

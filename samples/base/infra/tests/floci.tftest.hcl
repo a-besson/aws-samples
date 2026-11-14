@@ -56,6 +56,11 @@ run "apply_on_floci" {
   }
 
   assert {
+    condition     = length(module.vpc_endpoints.endpoints["ecr_dkr"].subnet_ids) == 1 && !contains(keys(module.vpc_endpoints.endpoints), "rds")
+    error_message = "Interface endpoints must sit in a single private subnet, without the unused rds endpoint"
+  }
+
+  assert {
     condition     = aws_config_delivery_channel.delivery.name == "delivery-channel"
     error_message = "Config delivery channel name did not match"
   }

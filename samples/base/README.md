@@ -7,7 +7,11 @@
 ### Networking (VPC)
 - **Multi-AZ VPC**: High-availability networking across 3 Availability Zones.
 - **Subnet Segmentation**: Dedicated public, private, and database subnets.
-- **VPC Endpoints**: Secure, private access to AWS services.
+- **VPC Endpoints**: Private access to AWS services without a NAT gateway. S3 and DynamoDB use free gateway
+  endpoints. ECS, ECR (`api`, `dkr`) and CloudWatch Logs use interface endpoints, which the ECS samples need. These
+  sit in the first private subnet only, and the other AZs reach them across the VPC: about 32 $/month instead of
+  96 $/month for 3 AZs (eu-west-3). Set `enable_interface_endpoints = false` (`TF_VAR_enable_interface_endpoints`)
+  to drop them when no ECS sample is deployed: their tasks can then no longer pull images or send logs.
 
 ### Governance (AWS Config)
 - **Configuration Recorder**: Records all configuration changes.

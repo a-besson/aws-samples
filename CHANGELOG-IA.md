@@ -20,6 +20,7 @@
 - **docs**: the sample READMEs carried a frozen, outdated `BEGIN_TF_DOCS` block (`>= 1.9.0`, `~> 5.4`, module `9.11.0`) or empty markers, while pre-commit generates `infra/TFDOCS.md`: replaced by a link to it; stray ` Linda` line removed from the msk-akhq README.
 - **msk-akhq**: the target group spoke HTTPS to AKHQ, which serves plain HTTP on 8080 (the health check already used HTTP), so every forwarded request failed the TLS handshake (502): it now uses HTTP, TLS still ends at the HTTPS listener.
 - **rds-aurora-pg**: `deletion_protection` off: it made `task destroy-all` fail on a lab cluster that has no data to keep and already skips the final snapshot; Trivy AWS-0343 (MEDIUM) ignored inline with the reason.
+- **finops (base)**: the interface endpoints (5 × 3 AZ, about 120 $/month idle) now sit in the first private subnet only and can be turned off with `enable_interface_endpoints` (default `true`, the ECS samples need them); the `rds` endpoint is removed, no caller uses the RDS API from the VPC (IAM auth tokens are signed locally). 4 endpoints in 1 AZ: about 32 $/month.
 
 ## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
 
