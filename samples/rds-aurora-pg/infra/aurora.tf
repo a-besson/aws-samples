@@ -11,7 +11,7 @@ resource "aws_db_subnet_group" "default" {
 
 data "aws_rds_engine_version" "postgresql" {
   engine  = "aurora-postgresql"
-  version = "16.4"
+  version = "16.15"
 }
 
 module "aurora_master" {

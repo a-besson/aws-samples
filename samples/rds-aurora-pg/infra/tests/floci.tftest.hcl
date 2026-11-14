@@ -45,7 +45,7 @@ override_data {
 override_data {
   target = data.aws_rds_engine_version.postgresql
   values = {
-    version = "16.4"
+    version = "16.15"
   }
 }
 

@@ -6,7 +6,7 @@ module "msk_cluster" {
 
   name = local.name
 
-  kafka_version = "3.5.1"
+  kafka_version = "3.9.x"
 
   number_of_broker_nodes = 3
 
