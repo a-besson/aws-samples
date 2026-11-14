@@ -18,7 +18,7 @@ Every project in this repository follows the same industrial standard:
 ### Foundational Stacks
 | Sample | Description | Documentation |
 | :--- | :--- | :---: |
-| [Base](./samples/base) | Unified foundational stack (VPC & AWS Config) | [README](./samples/base/README.md) |
+| [Base](./samples/base) | Unified foundational stack (VPC, endpoints, shared KMS key, ECR cache, AWS Config) | [README](./samples/base/README.md) |
 
 ### Service Samples
 | Sample | Description | Documentation |
@@ -73,6 +73,7 @@ task review
 ## 🛡️ Security & Quality
 
 - **Project Isolation**: Strict `infra/` vs `app/` directory separation.
+- **One encryption key**: a single customer managed KMS key, created in `base`, encrypts every sample.
 - **No identifier in code**: the state bucket comes from `.env` (`TF_VAR_state_bucket`), never from the code.
 - **Pinned versions**: Terraform, providers and modules are pinned exactly; every variable is validated.
 - **Layered Scanning**: Gitleaks, KICS (IaC) and Trivy (config, vulnerabilities, secrets), `fail-on` HIGH/CRITICAL.
