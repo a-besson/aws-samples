@@ -1,0 +1,67 @@
+version: "3"
+
+tasks:
+  init:
+    desc: Initialize Terraform with the shared S3 state bucket (TF_VAR_state_bucket from .env), migrating an older backend config
+    dir: infra
+    preconditions:
+      - sh: test -n "${TF_VAR_state_bucket:-}"
+        msg: Set TF_VAR_state_bucket in .env (see .env.example)
+    cmds:
+      - terraform init -input=false -migrate-state -backend-config="bucket=${TF_VAR_state_bucket}"
+
+  plan:
+    desc: Plan Terraform changes
+    dir: infra
+    cmds:
+      - terraform plan
+
+  apply:
+    desc: Apply Terraform changes
+    dir: infra
+    cmds:
+      - terraform apply --auto-approve
+
+  destroy:
+    desc: Destroy Terraform resources
+    dir: infra
+    cmds:
+      - terraform destroy --auto-approve
+
+  test:
+    desc: Apply the stack on a throwaway Floci container with `terraform test`, e2e checks included (no AWS account)
+    cmds:
+      - task: :tf-floci-test
+        vars:
+          TF_DIR: "{{.TASKFILE_DIR}}/infra"
+
+  docs:
+    desc: Generate Terraform documentation
+    dir: infra
+    cmds:
+      - terraform-docs markdown table --output-file TFDOCS.md --output-mode inject .
+
+  e2e:
+    desc: Smoke test on the real AWS account (after `apply` and the first pull of the job image, for you only) - drops a file and waits for its task to stop
+    prompt: This runs against the AWS account of AWS_PROFILE, writes one object in the bucket of the sample and starts one ECS task. Continue?
+    cmds:
+      - |
+        set -euo pipefail
+        BUCKET="$(terraform -chdir=infra output -raw bucket_name)"
+        CLUSTER="$(terraform -chdir=infra output -raw cluster_arn)"
+        NAME="e2e-$(date +%s).txt"
+        printf 'hello' | aws s3 cp - "s3://$BUCKET/incoming/$NAME"
+        for _ in $(seq 1 60); do
+          for TASK in $(aws ecs list-tasks --cluster "$CLUSTER" --desired-status STOPPED --query taskArns --output text); do
+            read -r KEY CODE <<EOF2
+        $(aws ecs describe-tasks --cluster "$CLUSTER" --tasks "$TASK" --query 'tasks[0].[overrides.containerOverrides[0].environment[1].value,containers[0].exitCode]' --output text)
+        EOF2
+            if [ "$KEY" = "incoming/$NAME" ]; then
+              if [ "$CODE" = 0 ]; then echo "OK: the task processed $KEY"; exit 0; fi
+              echo "KO: the task of $KEY exited with $CODE (see its logs)" >&2; exit 1
+            fi
+          done
+          sleep 5
+        done
+        echo "KO: no stopped task for incoming/$NAME after 5 minutes (look at the DLQ and the rule)" >&2
+        exit 1
