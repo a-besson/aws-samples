@@ -9,6 +9,7 @@
 - **security**: `check-cyber` pins Trivy v0.76.2: without `version`, trivy-action v0.36.0 ran v0.70.0, affected by GHSA-mcj4-mphf-j9ff (CVE-2026-55092, HIGH), GHSA-8rc5-4fr6-64pw and GHSA-q3fv-x8vg-qqm4.
 - **deps**: Floci 2.2.0 → 2.4.0 and KICS v2.1.20 → v2.2.0, both pinned by tag and digest in the root Taskfile (single source, now also read by `check-cyber`), Renovate regex extended to the KICS image and to digests. Floci ≥ 2.3 rejects a listener certificate the account does not have: the `msk-akhq` test imports a throwaway self-signed certificate (`tests/fixtures/acm`) instead of passing a fake ARN.
 - **ci**: the KICS SARIF of `check-cyber` was written to `RUNNER_TEMP`, outside the workspace that `hashFiles()` searches, so the upload never ran (code scanning has no `kics` analysis since the workflow exists); the report now goes to `kics-results/` in the workspace.
+- **deps**: `actions/setup-python` v7.1.0, `github/codeql-action` v4.39.3, `pre-commit` 4.7.0, `pre-commit-terraform` v1.109.4, `conventional-pre-commit` v4.5.0, TFLint AWS ruleset 0.50.0; TFLint pinned to v0.65.0 in CI (`setup-tflint` installed `latest`). Releases younger than 7 days (terraform-docs 0.25.1, pre-commit-terraform v1.109.5, KICS v2.2.1, TFLint v0.66.0) are left for later.
 
 ## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
 
