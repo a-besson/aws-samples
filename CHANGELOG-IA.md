@@ -21,6 +21,7 @@
 - **msk-akhq**: the target group spoke HTTPS to AKHQ, which serves plain HTTP on 8080 (the health check already used HTTP), so every forwarded request failed the TLS handshake (502): it now uses HTTP, TLS still ends at the HTTPS listener.
 - **rds-aurora-pg**: `deletion_protection` off: it made `task destroy-all` fail on a lab cluster that has no data to keep and already skips the final snapshot; Trivy AWS-0343 (MEDIUM) ignored inline with the reason.
 - **finops (base)**: the interface endpoints (5 × 3 AZ, about 120 $/month idle) now sit in the first private subnet only and can be turned off with `enable_interface_endpoints` (default `true`, the ECS samples need them); the `rds` endpoint is removed, no caller uses the RDS API from the VPC (IAM auth tokens are signed locally). 4 endpoints in 1 AZ: about 32 $/month.
+- **tests**: Floci is published on `127.0.0.1:4566` only, locally and in CI: it has no authentication and drives the Docker socket (past advisories were unauthenticated RCEs on that port). The containers it starts reach it over the Docker network, not the published port; `task test-all` stays 5/5.
 
 ## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
 

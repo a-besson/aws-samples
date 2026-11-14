@@ -72,7 +72,8 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: |
           IMAGE="$(sed -n 's#^ *FLOCI_IMAGE: \(.*\)$#\1#p' Taskfile.yml | head -n 1)"
-          docker run -d --name floci -p 4566:4566 -e FLOCI_RUN_AS_ROOT=true \
+          # loopback only: the emulator has no authentication and drives the Docker socket
+          docker run -d --name floci -p 127.0.0.1:4566:4566 -e FLOCI_RUN_AS_ROOT=true \
             -v /var/run/docker.sock:/var/run/docker.sock "$IMAGE"
           for _ in $(seq 1 60); do curl -sf http://localhost:4566/_floci/health >/dev/null && exit 0; sleep 1; done
           docker logs floci

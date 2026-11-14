@@ -78,7 +78,8 @@ tasks:
           rm -rf "$TF_DATA_DIR"
         }
         trap cleanup EXIT
-        "$CLI" run -d --name "$NAME" -p 4566:4566 -e FLOCI_RUN_AS_ROOT=true --security-opt label=disable \
+        # loopback only: the emulator has no authentication and drives the Docker socket
+        "$CLI" run -d --name "$NAME" -p 127.0.0.1:4566:4566 -e FLOCI_RUN_AS_ROOT=true --security-opt label=disable \
           -v /var/run/docker.sock:/var/run/docker.sock {{.FLOCI_IMAGE}} >/dev/null
         for _ in $(seq 1 60); do curl -sf http://localhost:4566/_floci/health >/dev/null && break; sleep 1; done
         cd "{{.TF_DIR}}"
