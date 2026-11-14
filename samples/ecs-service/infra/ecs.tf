@@ -100,7 +100,7 @@ module "ecs_service" {
       ]
 
       health_check = {
-        command = ["CMD-SHELL", "curl -f http://localhost:${local.container_port}/health || exit 1"]
+        command = ["CMD-SHELL", "curl -f http://localhost:${local.container_port}/ || exit 1"]
       }
 
       enable_cloudwatch_logging              = true

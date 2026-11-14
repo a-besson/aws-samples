@@ -2,7 +2,7 @@ locals {
   name = "lab-ecs-service"
 
   container_name = "ecs-sample"
-  container_port = 8080
+  container_port = 80 # port of the default nginx site
 
   tags = {
     Environment = "dev"
