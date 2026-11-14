@@ -16,6 +16,7 @@
 - **ecs-service**: the nginx image listens on 80 (`ExposedPorts 80/tcp`) and has no `/health` route, but the task mapped 8080 and probed `/health`: container port 80 and health check on `/`.
 - **rds-aurora-pg**: `random_password.master` removed (dead code since `manage_master_user_password = true`, its KICS ignore and its test assertion with it, plus the then unused `random` provider); `db_subnet_group_name` outputs the name instead of the whole resource.
 - **lambda (rds-aurora-pg)**: the connection is closed in `finally` and awaited (it leaked when the query failed), the `pg_roles` rows are no longer logged (row count only), unused imports removed, `main` points to `index.mjs`, dependencies pinned to the versions already resolved by the lock file (`@aws-sdk/rds-signer` 3.1079.0, `pg` 8.13.1), and the unused `rds-ca-2019-root.pem` (expired 2024-08-22) deleted. TLS verification (`ssl: 'no-verify'`) is a proposal in the review.
+- **msk-akhq**: `awsDebugCreds=true` removed from the AKHQ SASL config (debug option of the MSK IAM client that logs the identity used at every authentication).
 
 ## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
 

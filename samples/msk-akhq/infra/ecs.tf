@@ -24,7 +24,7 @@ locals {
             bootstrap.servers: ${module.msk_cluster[0].bootstrap_brokers_sasl_iam}
             security.protocol: SASL_SSL
             sasl.mechanism: AWS_MSK_IAM
-            sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required awsDebugCreds=true;
+            sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
             sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
     EOT
 }
