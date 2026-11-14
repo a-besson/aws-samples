@@ -1,9 +1,10 @@
 # CHANGELOG-IA.md - Decision Tracking
 
-## [2026-11-14] - Daily Log - Renamed SPECS.md to CHANGELOG-IA.md, removed NOTES.md
+## [2026-11-14] - Daily Log - CHANGELOG-IA rename, global review: toolchain, CI supply chain and sample fixes
 
 - Renamed `SPECS.md` to `CHANGELOG-IA.md` (history preserved) to match the naming convention used in sibling repositories; updated the one reference in `AGENTS.md`.
 - Removed `NOTES.md` (a one-off personal todo list from before the `samples/` refactor, already fully actioned, no longer referenced anywhere).
+- **toolchain**: Terraform pinned to 1.17.2 (was 1.16.5) in every stack and in CI, the version the workstation runs: with an exact pin, any other local binary refuses `init`. 1.17.2 was 3 days old, below the 7-day minimum release age: exception approved by the user (patch release, bug fixes only).
 
 ## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
 

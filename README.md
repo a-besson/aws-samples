@@ -34,7 +34,7 @@ Every project in this repository follows the same industrial standard:
 
 ### Prerequisites
 
-- `terraform` 1.16.5 (pinned in every stack)
+- `terraform` 1.17.2 (pinned in every stack and in CI)
 - `awscli` with a valid session (only to deploy; tests need no AWS account)
 - `task` (go-task) for orchestration
 - `podman` or `docker` for the Floci emulator and KICS
