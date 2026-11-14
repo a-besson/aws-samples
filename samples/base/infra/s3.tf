@@ -3,11 +3,22 @@
 #
 
 # Create S3 bucket for AWS Config logs
-# Encrypted with the default SSE-S3 (AWS managed keys): a customer managed key costs more for no gain on a lab.
-#trivy:ignore:AWS-0132:exp:2027-01-31
 resource "aws_s3_bucket" "config_bucket" {
   bucket        = "aws-config-bucket-${data.aws_caller_identity.current.account_id}"
   force_destroy = true
+}
+
+# Encrypted with the shared key of the samples; the bucket key keeps the KMS requests (and their cost) low
+resource "aws_s3_bucket_server_side_encryption_configuration" "config_bucket" {
+  bucket = aws_s3_bucket.config_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = module.kms.key_arn
+    }
+    bucket_key_enabled = true
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "config_bucket" {

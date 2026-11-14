@@ -13,6 +13,16 @@
   96 $/month for 3 AZs (eu-west-3). Set `enable_interface_endpoints = false` (`TF_VAR_enable_interface_endpoints`)
   to drop them when no ECS sample is deployed: their tasks can then no longer pull images or send logs.
 
+### Encryption (KMS)
+- **One customer managed key for every sample** (`alias/lab-samples`, output `kms_key_arn`): the other stacks read it
+  from this state and never create a key of their own. It encrypts the AWS Config bucket here (SSE-KMS with a bucket
+  key), and the log groups, Aurora, its master secret and MSK in the samples.
+- **Key policy**: the account keeps full access through IAM (the default policy), which RDS, MSK and Secrets Manager
+  use through grants. CloudWatch Logs (any log group of the account in the region) and AWS Config (delivery to the
+  bucket, restricted to this account) get a statement of their own, as the AWS documentation requires.
+- **Cost**: 1 $/month, plus 1 $/month for each of the first two yearly rotations (capped at 3 $/month), plus
+  0.03 $ per 10,000 requests. Deleting the stack schedules the key for deletion after 7 days.
+
 ### Container images (ECR pull through cache)
 - **ECR Public cache**: a pull through cache rule (`ecr-public` → `public.ecr.aws`) lets the ECS samples pull public
   images from the private registry, through the endpoints above, without a NAT gateway. Their image URI is

@@ -18,6 +18,7 @@
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
+| <a name="module_kms"></a> [kms](#module\_kms) | terraform-aws-modules/kms/aws | 3.1.1 |
 | <a name="module_vpc"></a> [vpc](#module\_vpc) | terraform-aws-modules/vpc/aws | 5.21.0 |
 | <a name="module_vpc_endpoints"></a> [vpc\_endpoints](#module\_vpc\_endpoints) | terraform-aws-modules/vpc/aws//modules/vpc-endpoints | 5.21.0 |
 
@@ -40,6 +41,7 @@
 | [aws_s3_bucket.config_bucket](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/s3_bucket) | resource |
 | [aws_s3_bucket_policy.config_bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/s3_bucket_policy) | resource |
 | [aws_s3_bucket_public_access_block.config_bucket](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/s3_bucket_public_access_block) | resource |
+| [aws_s3_bucket_server_side_encryption_configuration.config_bucket](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
 | [aws_s3_bucket_versioning.config_bucket_versioning](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/s3_bucket_versioning) | resource |
 | [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/data-sources/availability_zones) | data source |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/data-sources/caller_identity) | data source |
@@ -59,6 +61,7 @@
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_ecr_public_pull_through_prefix"></a> [ecr\_public\_pull\_through\_prefix](#output\_ecr\_public\_pull\_through\_prefix) | Repository prefix of the ECR Public pull through cache (image URI: ACCOUNT.dkr.ecr.REGION.amazonaws.com/PREFIX/REPOSITORY:TAG) |
+| <a name="output_kms_key_arn"></a> [kms\_key\_arn](#output\_kms\_key\_arn) | ARN of the customer managed key shared by every stack of the samples |
 | <a name="output_subnets_database_cidr"></a> [subnets\_database\_cidr](#output\_subnets\_database\_cidr) | Database subnets cidr |
 | <a name="output_subnets_database_ids"></a> [subnets\_database\_ids](#output\_subnets\_database\_ids) | Database subnets IDs |
 | <a name="output_subnets_database_subnet_group"></a> [subnets\_database\_subnet\_group](#output\_subnets\_database\_subnet\_group) | Database subnets group name |

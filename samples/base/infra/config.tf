@@ -24,6 +24,8 @@ resource "aws_config_delivery_channel" "delivery" {
   name           = "delivery-channel"
   s3_bucket_name = aws_s3_bucket.config_bucket.id
   s3_key_prefix  = "config"
+  # without it, AWS Config writes its files with SSE-S3 instead of the bucket key
+  s3_kms_key_arn = module.kms.key_arn
   depends_on     = [aws_config_configuration_recorder_status.config_recorder_status]
 }
 
