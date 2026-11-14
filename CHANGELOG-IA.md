@@ -12,6 +12,7 @@
 - **deps**: `actions/setup-python` v7.1.0, `github/codeql-action` v4.39.3, `pre-commit` 4.7.0, `pre-commit-terraform` v1.109.4, `conventional-pre-commit` v4.5.0, TFLint AWS ruleset 0.50.0; TFLint pinned to v0.65.0 in CI (`setup-tflint` installed `latest`). Releases younger than 7 days (terraform-docs 0.25.1, pre-commit-terraform v1.109.5, KICS v2.2.1, TFLint v0.66.0) are left for later.
 - **naming**: `local.name = "lab-${basename(path.cwd)}"` always resolved to `lab-infra` (every command runs in `infra/`), so `ecs-task` and `msk-akhq` both created the IAM role `lab-infra-task-role`; each stack now has a literal name (`lab-<sample>`) and a literal `Stack` tag. Deployed resources named `lab-infra-*` are replaced on the next apply; the test asserts on the names follow.
 - **versions**: Aurora PostgreSQL 16.4 is no longer in the supported minor versions (the `aws_rds_engine_version` lookup cannot resolve it): 16.15, end of standard support 2028-02-28. MSK Kafka 3.5.1 reached end of support on 2025-10-23 (MSK auto-upgrades such clusters without notice): 3.9.x, the version MSK recommends.
+- **images**: task definitions no longer use `:latest`: amazonlinux `2023.12.20261102.0` and nginx `1.30.6` pinned by tag and ECR Public digest, AKHQ `0.28.0` (private ECR copy, README `crane cp` aligned; the ECR registry region now follows `aws_region`).
 
 ## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
 

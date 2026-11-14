@@ -4,7 +4,7 @@ resource "random_password" "akhq_admin" {
 }
 
 locals {
-  image_name = "${data.aws_caller_identity.current.account_id}.dkr.ecr.eu-west-3.amazonaws.com/kafka/akhq:latest"
+  image_name = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/kafka/akhq:0.28.0"
 
   akhq_config = <<-EOT
     micronaut:

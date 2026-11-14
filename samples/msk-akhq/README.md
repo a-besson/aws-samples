@@ -25,7 +25,7 @@ aws ecr get-login-password --region eu-west-3 | docker login --username AWS --pa
 aws ecr create-repository --repository-name kafka/akhq
 
 # Copy image (using crane)
-crane cp tchiotludo/akhq:latest **********.dkr.ecr.eu-west-3.amazonaws.com/kafka/akhq:latest
+crane cp tchiotludo/akhq:0.28.0 **********.dkr.ecr.eu-west-3.amazonaws.com/kafka/akhq:0.28.0
 ```
 
 ### 2. Deploy Infrastructure

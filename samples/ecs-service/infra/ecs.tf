@@ -89,7 +89,7 @@ module "ecs_service" {
       essential                = true
       readonly_root_filesystem = false
 
-      image = "public.ecr.aws/nginx/nginx:latest"
+      image = "public.ecr.aws/nginx/nginx:1.30.6@sha256:2e92d5fff8ca7a6a1d64aa6853d96ef739acec5bbb5f3731200163865ceb3679"
       port_mappings = [
         {
           name          = local.container_name
