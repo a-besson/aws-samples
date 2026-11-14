@@ -1,4 +1,9 @@
-# SPECS.md - Decision Tracking
+# CHANGELOG-IA.md - Decision Tracking
+
+## [2026-11-14] - Daily Log - Renamed SPECS.md to CHANGELOG-IA.md, removed NOTES.md
+
+- Renamed `SPECS.md` to `CHANGELOG-IA.md` (history preserved) to match the naming convention used in sibling repositories; updated the one reference in `AGENTS.md`.
+- Removed `NOTES.md` (a one-off personal todo list from before the `samples/` refactor, already fully actioned, no longer referenced anywhere).
 
 ## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
 
