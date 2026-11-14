@@ -19,6 +19,10 @@ module "aurora_master" {
   engine_mode       = "provisioned"
   engine_version    = data.aws_rds_engine_version.postgresql.version
   storage_encrypted = true
+  # the shared key of the base stack, for the storage, the master secret and Performance Insights
+  kms_key_id                      = local.states.vpc.kms_key_arn
+  master_user_secret_kms_key_id   = local.states.vpc.kms_key_arn
+  performance_insights_kms_key_id = local.states.vpc.kms_key_arn
 
   database_name                       = "demo"
   master_username                     = "adminpg"

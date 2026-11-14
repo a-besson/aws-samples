@@ -177,10 +177,10 @@ resource "aws_appautoscaling_policy" "down" {
   depends_on = [aws_appautoscaling_target.target]
 }
 
-# kics-scan ignore-block  CloudWatch Log Group Without KMS
 resource "aws_cloudwatch_log_group" "ecs_log" {
   name              = "/ecs/${local.name}-container-log"
   retention_in_days = 1
+  kms_key_id        = local.states.vpc.kms_key_arn
 
   tags = local.tags
 }

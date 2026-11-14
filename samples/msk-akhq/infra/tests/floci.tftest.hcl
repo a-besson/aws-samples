@@ -36,6 +36,7 @@ override_data {
   values = {
     outputs = {
       vpc_id               = "vpc-default-eu-west-3"
+      kms_key_arn          = "arn:aws:kms:eu-west-3:000000000000:key/00000000-0000-0000-0000-000000000000"
       subnets_private_ids  = ["subnet-default-eu-west-3-a", "subnet-default-eu-west-3-b", "subnet-default-eu-west-3-c"]
       subnets_private_cidr = ["172.31.0.0/20", "172.31.16.0/20", "172.31.32.0/20"]
       subnets_public_ids   = ["subnet-default-eu-west-3-a", "subnet-default-eu-west-3-b", "subnet-default-eu-west-3-c"]

@@ -8,6 +8,9 @@ module "msk_cluster" {
 
   kafka_version = "3.9.x"
 
+  # the shared key of the base stack
+  encryption_at_rest_kms_key_arn = local.states.vpc.kms_key_arn
+
   number_of_broker_nodes = 3
 
   broker_node_instance_type  = "kafka.t3.small"

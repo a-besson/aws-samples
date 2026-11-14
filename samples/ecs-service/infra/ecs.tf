@@ -7,6 +7,9 @@ module "ecs_cluster" {
 
   cluster_name = "ecs-fargate-cluster"
 
+  # log group of the cluster, encrypted with the shared key of the base stack
+  cloudwatch_log_group_kms_key_id = local.states.vpc.kms_key_arn
+
   cluster_configuration = {
     execute_command_configuration = {
       logging = "OVERRIDE"
@@ -116,6 +119,7 @@ module "ecs_service" {
       create_cloudwatch_log_group            = true
       cloudwatch_log_group_name              = "/aws/ecs/${local.name}/${local.container_name}"
       cloudwatch_log_group_retention_in_days = 1
+      cloudwatch_log_group_kms_key_id        = local.states.vpc.kms_key_arn
 
       log_configuration = {
         logDriver = "awslogs"

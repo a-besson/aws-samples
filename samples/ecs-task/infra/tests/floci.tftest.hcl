@@ -31,6 +31,7 @@ override_data {
   values = {
     outputs = {
       vpc_id                         = "vpc-00000000"
+      kms_key_arn                    = "arn:aws:kms:eu-west-3:000000000000:key/00000000-0000-0000-0000-000000000000"
       subnets_public_ids             = ["subnet-00000000"]
       ecr_public_pull_through_prefix = "ecr-public"
     }
@@ -48,6 +49,11 @@ run "apply_on_floci" {
   assert {
     condition     = aws_cloudwatch_log_group.batch.retention_in_days == 1
     error_message = "The batch log group must keep logs one day"
+  }
+
+  assert {
+    condition     = aws_cloudwatch_log_group.batch.kms_key_id == "arn:aws:kms:eu-west-3:000000000000:key/00000000-0000-0000-0000-000000000000"
+    error_message = "The batch log group must be encrypted with the shared key of the base stack"
   }
 
   assert {

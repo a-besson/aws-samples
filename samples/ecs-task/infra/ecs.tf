@@ -30,6 +30,7 @@ resource "aws_ecs_task_definition" "batch" {
 resource "aws_cloudwatch_log_group" "batch" {
   name              = "/aws/ecs/${local.name}"
   retention_in_days = 1
+  kms_key_id        = local.states.vpc.kms_key_arn
 }
 
 # IAM Roles
