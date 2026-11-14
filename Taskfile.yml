@@ -79,7 +79,9 @@ tasks:
         }
         trap cleanup EXIT
         # loopback only: the emulator has no authentication and drives the Docker socket
-        "$CLI" run -d --name "$NAME" -p 127.0.0.1:4566:4566 -e FLOCI_RUN_AS_ROOT=true --security-opt label=disable \
+        # the asynchronous retries of a Lambda run back to back (AWS waits 1 then 2 minutes): the e2e tests stay short
+        "$CLI" run -d --name "$NAME" -p 127.0.0.1:4566:4566 -e FLOCI_RUN_AS_ROOT=true \
+          -e FLOCI_SERVICES_LAMBDA_ASYNC_RETRY_DELAY_SECONDS=0 --security-opt label=disable \
           -v /var/run/docker.sock:/var/run/docker.sock {{.FLOCI_IMAGE}} >/dev/null
         for _ in $(seq 1 60); do curl -sf http://localhost:4566/_floci/health >/dev/null && break; sleep 1; done
         cd "{{.TF_DIR}}"
@@ -87,9 +89,11 @@ tasks:
         terraform test
 
   setup:
-    desc: Install workstation dependencies (Brewfile), git hooks and TFLint plugins, then check the setup
+    desc: Install workstation dependencies (Brewfile), the Python tooling (.venv), git hooks and TFLint plugins, then check the setup
     cmds:
       - brew bundle --file=Brewfile
+      - python3.13 -m venv .venv # the Lambda runtime of the Python samples
+      - .venv/bin/pip install --require-virtualenv --quiet -r requirements-dev.txt
       - pre-commit install
       - tflint --init --config=.tflint.hcl
       - task: doctor
@@ -100,7 +104,7 @@ tasks:
     cmds:
       - |
         missing=0
-        for t in terraform tflint terraform-docs pre-commit gitleaks trivy actionlint podman; do
+        for t in terraform tflint terraform-docs pre-commit gitleaks trivy actionlint podman jq python3.13; do
           command -v "$t" >/dev/null || { echo "MISSING: $t (run: task setup)"; missing=1; }
         done
         if command -v aws >/dev/null; then
