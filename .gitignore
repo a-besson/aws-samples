@@ -6,9 +6,8 @@ node_modules/
 python/
 *.zip
 
-# Local .terraform directories
+# Local .terraform directories (provider plugin cache only; .terraform.lock.hcl IS committed for reproducible builds / stable TFDOCS.md)
 **/.terraform/*
-**/.terraform.lock*
 plan.out
 plan.json
 
