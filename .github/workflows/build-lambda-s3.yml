@@ -1,0 +1,27 @@
+name: build-lambda-s3
+
+on:
+  pull_request:
+    paths:
+      - "samples/lambda-s3/**"
+      - "Taskfile.yml"
+      - ".tflint.hcl"
+      - "requirements-dev.txt"
+      - "pyproject.toml"
+      - "conftest.py"
+      - ".github/workflows/_build-sample.yml"
+      - ".github/workflows/build-lambda-s3.yml"
+
+concurrency:
+  group: build-lambda-s3-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build-sample.yml
+    with:
+      sample: lambda-s3
+      python: true

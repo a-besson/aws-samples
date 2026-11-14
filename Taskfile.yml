@@ -22,6 +22,9 @@ includes:
   ecs-task:
     taskfile: samples/ecs-task/Taskfile.yml
     dir: samples/ecs-task
+  lambda-s3:
+    taskfile: samples/lambda-s3/Taskfile.yml
+    dir: samples/lambda-s3
   msk-akhq:
     taskfile: samples/msk-akhq/Taskfile.yml
     dir: samples/msk-akhq
@@ -41,7 +44,7 @@ tasks:
 
   apply-samples:
     internal: true
-    deps: [rds-aurora-pg:apply, ecs-service:apply, ecs-task:apply, msk-akhq:apply]
+    deps: [rds-aurora-pg:apply, ecs-service:apply, ecs-task:apply, msk-akhq:apply, lambda-s3:apply]
 
   destroy-all:
     desc: Destroy every stack (services in parallel first, then base)
@@ -51,7 +54,7 @@ tasks:
 
   destroy-samples:
     internal: true
-    deps: [rds-aurora-pg:destroy, ecs-service:destroy, ecs-task:destroy, msk-akhq:destroy]
+    deps: [rds-aurora-pg:destroy, ecs-service:destroy, ecs-task:destroy, msk-akhq:destroy, lambda-s3:destroy]
 
   test-all:
     desc: Run `terraform test` of every stack on Floci, one after the other (the emulator listens on a fixed port)
@@ -61,6 +64,7 @@ tasks:
       - task: ecs-service:test
       - task: ecs-task:test
       - task: msk-akhq:test
+      - task: lambda-s3:test
 
   tf-floci-test:
     internal: true
