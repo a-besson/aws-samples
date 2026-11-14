@@ -29,6 +29,8 @@ resource "tls_self_signed_cert" "this" {
 }
 
 resource "aws_acm_certificate" "this" {
+  # Not a literal secret: a reference to the throwaway key generated in memory above, for the emulator only.
+  # kics-scan ignore-line
   private_key      = tls_private_key.this.private_key_pem
   certificate_body = tls_self_signed_cert.this.cert_pem
 
