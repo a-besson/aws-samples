@@ -6,10 +6,10 @@
   ],
   "customManagers": [
     {
-      "description": "Floci emulator image used by the Terraform tests",
+      "description": "Floci emulator and KICS scanner images, pinned by tag and digest in the root Taskfile",
       "customType": "regex",
       "managerFilePatterns": ["/^Taskfile\\.yml$/"],
-      "matchStrings": ["FLOCI_IMAGE: (?<depName>[^:\\s]+):(?<currentValue>\\S+)"],
+      "matchStrings": ["(?:FLOCI|KICS)_IMAGE: (?<depName>[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"],
       "datasourceTemplate": "docker"
     }
   ],

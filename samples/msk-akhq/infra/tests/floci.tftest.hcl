@@ -3,9 +3,8 @@
 # It checks the wiring of the resources, not the IAM policies nor the containers.
 
 variables {
-  floci_endpoint      = "http://localhost:4566"
-  state_bucket        = "floci-state"
-  acm_certificate_arn = "arn:aws:acm:eu-west-3:000000000000:certificate/00000000-0000-0000-0000-000000000000"
+  floci_endpoint = "http://localhost:4566"
+  state_bucket   = "floci-state"
 }
 
 # Overrides the provider of main.tf: every call goes to the emulator.
@@ -19,6 +18,7 @@ provider "aws" {
   s3_use_path_style           = true
 
   endpoints {
+    acm            = var.floci_endpoint
     appautoscaling = var.floci_endpoint
     cloudwatchlogs = var.floci_endpoint
     ec2            = var.floci_endpoint
@@ -49,8 +49,21 @@ override_resource {
   target = aws_ecs_service.ecs_service
 }
 
+# Floci >= 2.3 rejects a listener certificate the account does not have: import a throwaway one first.
+run "certificate" {
+  command = apply
+
+  module {
+    source = "./tests/fixtures/acm"
+  }
+}
+
 run "apply_on_floci" {
   command = apply
+
+  variables {
+    acm_certificate_arn = run.certificate.certificate_arn
+  }
 
   assert {
     condition     = module.msk_cluster[0].arn != ""
