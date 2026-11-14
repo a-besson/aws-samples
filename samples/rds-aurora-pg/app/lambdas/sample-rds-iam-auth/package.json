@@ -1,7 +1,7 @@
 {
   "name": "sample-rds-iam-auth",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "index.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -9,7 +9,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@aws-sdk/rds-signer": "^3.716.0",
-    "pg": "^8.13.1"
+    "@aws-sdk/rds-signer": "3.1079.0",
+    "pg": "8.13.1"
   }
 }

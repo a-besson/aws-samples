@@ -1,7 +1,5 @@
 import { Signer } from "@aws-sdk/rds-signer";
 import pg from 'pg';
-import fs from 'fs';
-import path from 'path';
 
 export const handler = async (event) => {
     const result = await dbOps();
@@ -42,10 +40,14 @@ async function dbOps() {
     ssl: 'no-verify'
   });
 
-    await client.connect();
-    var res = await client.query("SELECT * FROM pg_roles;");
-    console.log(res);
-    client.end();
-  return res;
+  await client.connect();
+  try {
+    const res = await client.query("SELECT * FROM pg_roles;");
+    console.log(`pg_roles: ${res.rowCount} rows`);
+    return res;
+  } finally {
+    // always release the connection, also when the query fails
+    await client.end();
+  }
 
 }
