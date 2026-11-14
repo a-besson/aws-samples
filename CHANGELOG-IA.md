@@ -5,6 +5,7 @@
 - Renamed `SPECS.md` to `CHANGELOG-IA.md` (history preserved) to match the naming convention used in sibling repositories; updated the one reference in `AGENTS.md`.
 - Removed `NOTES.md` (a one-off personal todo list from before the `samples/` refactor, already fully actioned, no longer referenced anywhere).
 - **toolchain**: Terraform pinned to 1.17.2 (was 1.16.5) in every stack and in CI, the version the workstation runs: with an exact pin, any other local binary refuses `init`. 1.17.2 was 3 days old, below the 7-day minimum release age: exception approved by the user (patch release, bug fixes only).
+- **ci**: `.gitlab-ci.yml` removed, GitHub Actions is the only CI; `AGENTS.md` (sync rule) and `README.md` aligned.
 
 ## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
 

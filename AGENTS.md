@@ -40,8 +40,8 @@ task <sample>:init|plan|apply|destroy|docs
 
 - No `plan`/`apply`/`destroy` and no `aws` command from an agent: the `<sample>:*` tasks and `bootstrap:s3` are for the
   user (use `task --dry`).
-- CI never holds cloud credentials and never plans, applies or deploys. GitHub Actions
-  (`.github/workflows`) and GitLab CI (`.gitlab-ci.yml`) stay in sync, except `terraform test` on Floci (GitHub only).
+- CI never holds cloud credentials and never plans, applies or deploys. GitHub Actions (`.github/workflows`) is the
+  only CI: there is no GitLab mirror.
 - The state bucket is never written in code: `TF_VAR_state_bucket` in `.env` (git-ignored, see `.env.example`) feeds
   `-backend-config` and the `state_bucket` variable. Backends use native S3 locking (`use_lockfile`).
 - Terraform, providers and modules are pinned exactly (lock files are git-ignored). Every variable has a `validation`.
