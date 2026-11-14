@@ -1,10 +1,10 @@
 locals {
-  name = "lab-${basename(path.cwd)}"
+  name = "lab-rds-aurora-pg"
 
   tags = {
     Environment = "dev"
     Project     = "aws-samples/${local.name}"
-    Stack       = basename(path.cwd)
+    Stack       = "rds-aurora-pg"
     ManagedBy   = "Terraform"
   }
 }

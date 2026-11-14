@@ -40,7 +40,7 @@ run "apply_on_floci" {
   command = apply
 
   assert {
-    condition     = aws_ecs_task_definition.batch.family == "lab-infra-task"
+    condition     = aws_ecs_task_definition.batch.family == "lab-ecs-task-task"
     error_message = "ECS task family name did not match"
   }
 

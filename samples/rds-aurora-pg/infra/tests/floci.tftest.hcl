@@ -52,7 +52,7 @@ override_data {
 override_resource {
   target = aws_db_subnet_group.default
   values = {
-    name = "lab-infra-rds-subnet-group"
+    name = "lab-rds-aurora-pg-rds-subnet-group"
   }
 }
 
@@ -64,7 +64,7 @@ run "apply_on_floci" {
   command = apply
 
   assert {
-    condition     = aws_db_subnet_group.default.name == "lab-infra-rds-subnet-group"
+    condition     = aws_db_subnet_group.default.name == "lab-rds-aurora-pg-rds-subnet-group"
     error_message = "DB subnet group name did not match"
   }
 

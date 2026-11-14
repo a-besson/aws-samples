@@ -1,5 +1,5 @@
 locals {
-  name = "lab-${basename(path.cwd)}"
+  name = "lab-ecs-task"
 }
 
 terraform {

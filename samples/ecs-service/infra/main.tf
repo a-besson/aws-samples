@@ -1,5 +1,5 @@
 locals {
-  name = "lab-${basename(path.cwd)}"
+  name = "lab-ecs-service"
 
   container_name = "ecs-sample"
   container_port = 8080
@@ -7,7 +7,7 @@ locals {
   tags = {
     Environment = "dev"
     Project     = "aws-samples/${local.name}"
-    Stack       = basename(path.cwd)
+    Stack       = "ecs-service"
     ManagedBy   = "Terraform"
   }
 }

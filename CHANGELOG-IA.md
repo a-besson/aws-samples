@@ -10,6 +10,7 @@
 - **deps**: Floci 2.2.0 → 2.4.0 and KICS v2.1.20 → v2.2.0, both pinned by tag and digest in the root Taskfile (single source, now also read by `check-cyber`), Renovate regex extended to the KICS image and to digests. Floci ≥ 2.3 rejects a listener certificate the account does not have: the `msk-akhq` test imports a throwaway self-signed certificate (`tests/fixtures/acm`) instead of passing a fake ARN.
 - **ci**: the KICS SARIF of `check-cyber` was written to `RUNNER_TEMP`, outside the workspace that `hashFiles()` searches, so the upload never ran (code scanning has no `kics` analysis since the workflow exists); the report now goes to `kics-results/` in the workspace.
 - **deps**: `actions/setup-python` v7.1.0, `github/codeql-action` v4.39.3, `pre-commit` 4.7.0, `pre-commit-terraform` v1.109.4, `conventional-pre-commit` v4.5.0, TFLint AWS ruleset 0.50.0; TFLint pinned to v0.65.0 in CI (`setup-tflint` installed `latest`). Releases younger than 7 days (terraform-docs 0.25.1, pre-commit-terraform v1.109.5, KICS v2.2.1, TFLint v0.66.0) are left for later.
+- **naming**: `local.name = "lab-${basename(path.cwd)}"` always resolved to `lab-infra` (every command runs in `infra/`), so `ecs-task` and `msk-akhq` both created the IAM role `lab-infra-task-role`; each stack now has a literal name (`lab-<sample>`) and a literal `Stack` tag. Deployed resources named `lab-infra-*` are replaced on the next apply; the test asserts on the names follow.
 
 ## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
 

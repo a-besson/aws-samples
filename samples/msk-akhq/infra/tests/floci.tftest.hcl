@@ -71,7 +71,7 @@ run "apply_on_floci" {
   }
 
   assert {
-    condition     = aws_ecs_task_definition.ecs_task_app.family == "lab-infra-container"
+    condition     = aws_ecs_task_definition.ecs_task_app.family == "lab-msk-akhq-container"
     error_message = "The AKHQ task definition was not registered"
   }
 }
