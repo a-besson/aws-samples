@@ -90,5 +90,5 @@ GitHub Actions (`.github/workflows`), on pull requests only, without any cloud c
 └── check-quality.yml    # pre-commit and CodeQL (weekly run included)
 ```
 
-GitHub Actions is the only CI (no GitLab mirror). Renovate (`renovate.json`) keeps the action digests and the Floci
-image up to date.
+GitHub Actions is the only CI (no GitLab mirror). Renovate (`renovate.json`) is configured to keep the action digests
+and the Floci and KICS images (tag and digest, root `Taskfile.yml`) up to date.
