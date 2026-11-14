@@ -15,9 +15,9 @@ known-first-party = ["s3_reader", "kinesis_consumer", "manifest_reader"] # the L
 [tool.pyright]
 pythonVersion = "3.13" # the Lambda runtime
 include = ["samples"]
-extraPaths = ["samples/lambda-s3/app/lambdas/s3_reader", "samples/lambda-kinesis/app/lambdas/kinesis_consumer"]
+extraPaths = ["samples/lambda-s3/app/lambdas/s3_reader", "samples/lambda-kinesis/app/lambdas/kinesis_consumer", "samples/step-function-s3/app/lambdas/manifest_reader"]
 
 [tool.pytest.ini_options]
 addopts = "--import-mode=importlib"
-pythonpath = ["samples/lambda-s3/app/lambdas/s3_reader", "samples/lambda-kinesis/app/lambdas/kinesis_consumer"]
+pythonpath = ["samples/lambda-s3/app/lambdas/s3_reader", "samples/lambda-kinesis/app/lambdas/kinesis_consumer", "samples/step-function-s3/app/lambdas/manifest_reader"]
 testpaths = ["samples"]

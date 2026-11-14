@@ -1,0 +1,46 @@
+{
+  "Comment": "Reads every file listed in the dropped manifest, one Lambda invocation per file",
+  "StartAt": "ReadFiles",
+  "States": {
+    "ReadFiles": {
+      "Type": "Map",
+      "ItemReader": {
+        "Resource": "arn:aws:states:::s3:getObject",
+        "ReaderConfig": { "InputType": "JSON" },
+        "Parameters": { "Bucket.$": "$.detail.bucket.name", "Key.$": "$.detail.object.key" }
+      },
+      "ItemSelector": { "bucket.$": "$.detail.bucket.name", "key.$": "$$.Map.Item.Value.key" },
+      "MaxConcurrency": 10,
+      "ToleratedFailurePercentage": 0,
+      "ItemProcessor": {
+        "ProcessorConfig": { "Mode": "DISTRIBUTED", "ExecutionType": "STANDARD" },
+        "StartAt": "ReadFile",
+        "States": {
+          "ReadFile": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": { "FunctionName": "${reader_function_arn}", "Payload.$": "$" },
+            "OutputPath": "$.Payload",
+            "Retry": [
+              {
+                "ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException"],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 3,
+                "BackoffRate": 2,
+                "JitterStrategy": "FULL"
+              },
+              {
+                "ErrorEquals": ["ObjectNotReadyError"],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 3,
+                "BackoffRate": 2
+              }
+            ],
+            "End": true
+          }
+        }
+      },
+      "End": true
+    }
+  }
+}

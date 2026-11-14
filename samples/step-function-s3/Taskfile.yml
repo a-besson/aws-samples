@@ -1,0 +1,82 @@
+version: "3"
+
+tasks:
+  init:
+    desc: Initialize Terraform with the shared S3 state bucket (TF_VAR_state_bucket from .env), migrating an older backend config
+    dir: infra
+    preconditions:
+      - sh: test -n "${TF_VAR_state_bucket:-}"
+        msg: Set TF_VAR_state_bucket in .env (see .env.example)
+    cmds:
+      - terraform init -input=false -migrate-state -backend-config="bucket=${TF_VAR_state_bucket}"
+
+  plan:
+    desc: Plan Terraform changes
+    dir: infra
+    cmds:
+      - terraform plan
+
+  apply:
+    desc: Apply Terraform changes
+    dir: infra
+    cmds:
+      - terraform apply --auto-approve
+
+  destroy:
+    desc: Destroy Terraform resources
+    dir: infra
+    cmds:
+      - terraform destroy --auto-approve
+
+  test:
+    desc: Apply the stack on a throwaway Floci container with `terraform test`, e2e checks included (no AWS account)
+    cmds:
+      - task: :tf-floci-test
+        vars:
+          TF_DIR: "{{.TASKFILE_DIR}}/infra"
+
+  app-test:
+    desc: Lint, type-check and unit-test the Python Lambda code (offline)
+    dir: "{{.ROOT_DIR}}"
+    cmds:
+      - "{{.ROOT_DIR}}/.venv/bin/ruff check samples/step-function-s3/app"
+      - "{{.ROOT_DIR}}/.venv/bin/ruff format --check samples/step-function-s3/app"
+      - "{{.ROOT_DIR}}/.venv/bin/pyright --pythonpath {{.ROOT_DIR}}/.venv/bin/python samples/step-function-s3/app"
+      - "{{.ROOT_DIR}}/.venv/bin/pytest samples/step-function-s3/app"
+
+  docs:
+    desc: Generate Terraform documentation
+    dir: infra
+    cmds:
+      - terraform-docs markdown table --output-file TFDOCS.md --output-mode inject .
+
+  e2e:
+    desc: Smoke test on the real AWS account (after `apply` and the first pull of the job image, for you only) - drops a manifest and a job file, waits for both executions
+    prompt: This runs against the AWS account of AWS_PROFILE, writes three objects in the bucket of the sample and starts one ECS task. Continue?
+    cmds:
+      - |
+        set -euo pipefail
+        BUCKET="$(terraform -chdir=infra output -raw bucket_name)"
+        MAP_ARN="$(terraform -chdir=infra output -raw lambda_map_state_machine_arn)"
+        JOB_ARN="$(terraform -chdir=infra output -raw ecs_job_state_machine_arn)"
+        ID="e2e-$(date +%s)"
+        printf '{"id":"%s"}' "$ID" | aws s3 cp - "s3://$BUCKET/data/$ID.json"
+        printf '[{"key":"data/%s.json"}]' "$ID" | aws s3 cp - "s3://$BUCKET/manifests/$ID.json"
+        printf 'hello' | aws s3 cp - "s3://$BUCKET/jobs/$ID.txt"
+        # the execution input is the S3 event: find the executions of this run by the key they were started for
+        status_of() { # state machine ARN, object key -> status of the execution started for that key
+          for arn in $(aws stepfunctions list-executions --state-machine-arn "$1" --max-results 20 --query 'executions[].executionArn' --output text); do
+            if aws stepfunctions describe-execution --execution-arn "$arn" --query input --output text | grep -q "$2"; then
+              aws stepfunctions describe-execution --execution-arn "$arn" --query status --output text
+              return
+            fi
+          done
+          echo NONE
+        }
+        for _ in $(seq 1 60); do
+          MAP="$(status_of "$MAP_ARN" "manifests/$ID.json")"; JOB="$(status_of "$JOB_ARN" "jobs/$ID.txt")"
+          if [ "$MAP" != RUNNING ] && [ "$MAP" != NONE ] && [ "$JOB" != RUNNING ] && [ "$JOB" != NONE ]; then break; fi
+          sleep 5
+        done
+        echo "Distributed Map: $MAP, ECS job: $JOB"
+        if [ "$MAP" = SUCCEEDED ] && [ "$JOB" = SUCCEEDED ]; then echo OK; else echo "KO: look at the executions, the DLQ and the logs" >&2; exit 1; fi
