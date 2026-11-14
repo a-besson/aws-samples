@@ -8,6 +8,7 @@
 - **ci**: `.gitlab-ci.yml` removed, GitHub Actions is the only CI; `AGENTS.md` (sync rule) and `README.md` aligned.
 - **security**: `check-cyber` pins Trivy v0.76.2: without `version`, trivy-action v0.36.0 ran v0.70.0, affected by GHSA-mcj4-mphf-j9ff (CVE-2026-55092, HIGH), GHSA-8rc5-4fr6-64pw and GHSA-q3fv-x8vg-qqm4.
 - **deps**: Floci 2.2.0 → 2.4.0 and KICS v2.1.20 → v2.2.0, both pinned by tag and digest in the root Taskfile (single source, now also read by `check-cyber`), Renovate regex extended to the KICS image and to digests. Floci ≥ 2.3 rejects a listener certificate the account does not have: the `msk-akhq` test imports a throwaway self-signed certificate (`tests/fixtures/acm`) instead of passing a fake ARN.
+- **ci**: the KICS SARIF of `check-cyber` was written to `RUNNER_TEMP`, outside the workspace that `hashFiles()` searches, so the upload never ran (code scanning has no `kics` analysis since the workflow exists); the report now goes to `kics-results/` in the workspace.
 
 ## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
 

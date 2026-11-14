@@ -21,17 +21,18 @@ jobs:
       actions: read # code scanning reads the workflow run
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # Same image as `task kics`: the one pinned in the root Taskfile.
+      # Same image as `task kics`: the one pinned in the root Taskfile. The report stays in the workspace: hashFiles()
+      # only sees files under GITHUB_WORKSPACE, a report in RUNNER_TEMP was never uploaded.
       - name: KICS scan
         run: |
           IMAGE="$(sed -n 's#^ *KICS_IMAGE: \(.*\)$#\1#p' Taskfile.yml | head -n 1)"
-          mkdir -p "$RUNNER_TEMP/kics"
-          docker run --rm -v "$PWD:/path:ro" -v "$RUNNER_TEMP/kics:/out" "$IMAGE" \
+          mkdir -p kics-results
+          docker run --rm -v "$PWD:/path:ro" -v "$PWD/kics-results:/out" "$IMAGE" \
             scan -p /path --config /path/kics.config -o /out --report-formats sarif,json
       - uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
-        if: always() && hashFiles('**/kics/results.sarif') != ''
+        if: always() && hashFiles('kics-results/results.sarif') != ''
         with:
-          sarif_file: ${{ runner.temp }}/kics/results.sarif
+          sarif_file: kics-results/results.sarif
           category: kics
 
   trivy:
