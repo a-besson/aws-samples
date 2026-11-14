@@ -14,7 +14,7 @@ data "aws_availability_zones" "available" {
 }
 
 terraform {
-  required_version = "1.16.5"
+  required_version = "1.17.2"
   required_providers {
     aws = {
       source  = "hashicorp/aws"

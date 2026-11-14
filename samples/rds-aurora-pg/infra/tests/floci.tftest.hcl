@@ -31,6 +31,7 @@ override_data {
   values = {
     outputs = {
       vpc_id               = "vpc-default-eu-west-3"
+      kms_key_arn          = "arn:aws:kms:eu-west-3:000000000000:key/00000000-0000-0000-0000-000000000000"
       vpc_azs              = ["eu-west-3a", "eu-west-3b", "eu-west-3c"]
       subnets_database_ids = ["subnet-default-eu-west-3-a", "subnet-default-eu-west-3-b", "subnet-default-eu-west-3-c"]
       subnets_private_cidr = ["172.31.0.0/20", "172.31.16.0/20", "172.31.32.0/20"]
@@ -45,14 +46,14 @@ override_data {
 override_data {
   target = data.aws_rds_engine_version.postgresql
   values = {
-    version = "16.4"
+    version = "16.15"
   }
 }
 
 override_resource {
   target = aws_db_subnet_group.default
   values = {
-    name = "lab-infra-rds-subnet-group"
+    name = "lab-rds-aurora-pg-rds-subnet-group"
   }
 }
 
@@ -64,12 +65,7 @@ run "apply_on_floci" {
   command = apply
 
   assert {
-    condition     = aws_db_subnet_group.default.name == "lab-infra-rds-subnet-group"
+    condition     = aws_db_subnet_group.default.name == "lab-rds-aurora-pg-rds-subnet-group"
     error_message = "DB subnet group name did not match"
-  }
-
-  assert {
-    condition     = length(random_password.master.result) == 20
-    error_message = "The generated master password must have 20 characters"
   }
 }

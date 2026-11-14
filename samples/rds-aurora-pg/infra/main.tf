@@ -1,24 +1,20 @@
 locals {
-  name = "lab-${basename(path.cwd)}"
+  name = "lab-rds-aurora-pg"
 
   tags = {
     Environment = "dev"
     Project     = "aws-samples/${local.name}"
-    Stack       = basename(path.cwd)
+    Stack       = "rds-aurora-pg"
     ManagedBy   = "Terraform"
   }
 }
 
 terraform {
-  required_version = "1.16.5"
+  required_version = "1.17.2"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = "5.100.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "3.9.1"
     }
   }
   backend "s3" {

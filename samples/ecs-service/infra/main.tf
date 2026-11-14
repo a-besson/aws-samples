@@ -1,13 +1,13 @@
 locals {
-  name = "lab-${basename(path.cwd)}"
+  name = "lab-ecs-service"
 
   container_name = "ecs-sample"
-  container_port = 8080
+  container_port = 80 # port of the default nginx site
 
   tags = {
     Environment = "dev"
     Project     = "aws-samples/${local.name}"
-    Stack       = basename(path.cwd)
+    Stack       = "ecs-service"
     ManagedBy   = "Terraform"
   }
 }
@@ -15,7 +15,7 @@ locals {
 data "aws_caller_identity" "current" {}
 
 terraform {
-  required_version = "1.16.5"
+  required_version = "1.17.2"
   required_providers {
     aws = {
       source  = "hashicorp/aws"

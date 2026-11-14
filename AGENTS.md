@@ -6,12 +6,12 @@ or `GEMINI.md`. Skills are global (`task skills` in the config repo), never vers
 
 ## Stack
 
-Terraform samples for AWS, one stack per `samples/<name>/infra/`. `samples/base` (VPC, endpoints, AWS Config) is
-applied first; the other samples read its outputs through `terraform_remote_state`.
+Terraform samples for AWS, one stack per `samples/<name>/infra/`. `samples/base` (VPC, endpoints, KMS key, AWS Config)
+is applied first; the other samples read its outputs through `terraform_remote_state`.
 
 | Sample | Shape |
 |---|---|
-| `base` | VPC, VPC endpoints, AWS Config |
+| `base` | VPC, VPC endpoints, the shared KMS key, ECR Public pull through cache, AWS Config |
 | `rds-aurora-pg` | Aurora PostgreSQL Serverless v2 (+ Node.js IAM-auth Lambda sample in `app/`) |
 | `ecs-service` | ECS cluster and Fargate service |
 | `ecs-task` | ECS task definition run as a batch |
@@ -40,10 +40,12 @@ task <sample>:init|plan|apply|destroy|docs
 
 - No `plan`/`apply`/`destroy` and no `aws` command from an agent: the `<sample>:*` tasks and `bootstrap:s3` are for the
   user (use `task --dry`).
-- CI never holds cloud credentials and never plans, applies or deploys. GitHub Actions
-  (`.github/workflows`) and GitLab CI (`.gitlab-ci.yml`) stay in sync, except `terraform test` on Floci (GitHub only).
+- CI never holds cloud credentials and never plans, applies or deploys. GitHub Actions (`.github/workflows`) is the
+  only CI: there is no GitLab mirror.
 - The state bucket is never written in code: `TF_VAR_state_bucket` in `.env` (git-ignored, see `.env.example`) feeds
   `-backend-config` and the `state_bucket` variable. Backends use native S3 locking (`use_lockfile`).
+- One customer managed KMS key for all the samples, created in `base` (`kms_key_arn` output): every stack encrypts
+  with it (logs, databases, streams, queues, buckets...) and never creates a key of its own.
 - Terraform, providers and modules are pinned exactly (lock files are git-ignored). Every variable has a `validation`.
 - Security findings: fix, else ignore inline next to the resource with the reason. Never a global ignore or a lower
   `fail-on`.

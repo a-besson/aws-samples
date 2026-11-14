@@ -4,9 +4,10 @@ version: "3"
 dotenv: [.env]
 
 vars:
-  KICS_IMAGE: docker.io/checkmarx/kics:v2.1.20
-  # Single source of the Floci emulator image: read by `tf-floci-test` and by the CI (_build-sample.yml), kept by Renovate.
-  FLOCI_IMAGE: floci/floci:2.2.0
+  # Single sources of the scanner and emulator images, pinned by tag and digest: read by the tasks below and by the CI
+  # (check-cyber.yml, _build-sample.yml), kept by Renovate (renovate.json).
+  KICS_IMAGE: docker.io/checkmarx/kics:v2.2.0@sha256:ef29dbac14b046b1ef65f3280646112e927a61781c5f01bca1aeb723e0b96003
+  FLOCI_IMAGE: floci/floci:2.4.0@sha256:5ee85db604c4aa74ac76e07ea5cc83086f37bb472bf3dbb97e34019e48efae9c
 
 includes:
   base:
@@ -77,7 +78,8 @@ tasks:
           rm -rf "$TF_DATA_DIR"
         }
         trap cleanup EXIT
-        "$CLI" run -d --name "$NAME" -p 4566:4566 -e FLOCI_RUN_AS_ROOT=true --security-opt label=disable \
+        # loopback only: the emulator has no authentication and drives the Docker socket
+        "$CLI" run -d --name "$NAME" -p 127.0.0.1:4566:4566 -e FLOCI_RUN_AS_ROOT=true --security-opt label=disable \
           -v /var/run/docker.sock:/var/run/docker.sock {{.FLOCI_IMAGE}} >/dev/null
         for _ in $(seq 1 60); do curl -sf http://localhost:4566/_floci/health >/dev/null && break; sleep 1; done
         cd "{{.TF_DIR}}"

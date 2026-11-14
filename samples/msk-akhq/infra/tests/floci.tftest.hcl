@@ -3,9 +3,8 @@
 # It checks the wiring of the resources, not the IAM policies nor the containers.
 
 variables {
-  floci_endpoint      = "http://localhost:4566"
-  state_bucket        = "floci-state"
-  acm_certificate_arn = "arn:aws:acm:eu-west-3:000000000000:certificate/00000000-0000-0000-0000-000000000000"
+  floci_endpoint = "http://localhost:4566"
+  state_bucket   = "floci-state"
 }
 
 # Overrides the provider of main.tf: every call goes to the emulator.
@@ -19,6 +18,7 @@ provider "aws" {
   s3_use_path_style           = true
 
   endpoints {
+    acm            = var.floci_endpoint
     appautoscaling = var.floci_endpoint
     cloudwatchlogs = var.floci_endpoint
     ec2            = var.floci_endpoint
@@ -36,6 +36,7 @@ override_data {
   values = {
     outputs = {
       vpc_id               = "vpc-default-eu-west-3"
+      kms_key_arn          = "arn:aws:kms:eu-west-3:000000000000:key/00000000-0000-0000-0000-000000000000"
       subnets_private_ids  = ["subnet-default-eu-west-3-a", "subnet-default-eu-west-3-b", "subnet-default-eu-west-3-c"]
       subnets_private_cidr = ["172.31.0.0/20", "172.31.16.0/20", "172.31.32.0/20"]
       subnets_public_ids   = ["subnet-default-eu-west-3-a", "subnet-default-eu-west-3-b", "subnet-default-eu-west-3-c"]
@@ -49,8 +50,21 @@ override_resource {
   target = aws_ecs_service.ecs_service
 }
 
+# Floci >= 2.3 rejects a listener certificate the account does not have: import a throwaway one first.
+run "certificate" {
+  command = apply
+
+  module {
+    source = "./tests/fixtures/acm"
+  }
+}
+
 run "apply_on_floci" {
   command = apply
+
+  variables {
+    acm_certificate_arn = run.certificate.certificate_arn
+  }
 
   assert {
     condition     = module.msk_cluster[0].arn != ""
@@ -58,7 +72,7 @@ run "apply_on_floci" {
   }
 
   assert {
-    condition     = aws_ecs_task_definition.ecs_task_app.family == "lab-infra-container"
+    condition     = aws_ecs_task_definition.ecs_task_app.family == "lab-msk-akhq-container"
     error_message = "The AKHQ task definition was not registered"
   }
 }

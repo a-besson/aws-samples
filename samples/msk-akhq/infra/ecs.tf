@@ -4,7 +4,7 @@ resource "random_password" "akhq_admin" {
 }
 
 locals {
-  image_name = "${data.aws_caller_identity.current.account_id}.dkr.ecr.eu-west-3.amazonaws.com/kafka/akhq:latest"
+  image_name = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/kafka/akhq:0.28.0"
 
   akhq_config = <<-EOT
     micronaut:
@@ -24,7 +24,7 @@ locals {
             bootstrap.servers: ${module.msk_cluster[0].bootstrap_brokers_sasl_iam}
             security.protocol: SASL_SSL
             sasl.mechanism: AWS_MSK_IAM
-            sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required awsDebugCreds=true;
+            sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required;
             sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
     EOT
 }
@@ -177,10 +177,10 @@ resource "aws_appautoscaling_policy" "down" {
   depends_on = [aws_appautoscaling_target.target]
 }
 
-# kics-scan ignore-block  CloudWatch Log Group Without KMS
 resource "aws_cloudwatch_log_group" "ecs_log" {
   name              = "/ecs/${local.name}-container-log"
   retention_in_days = 1
+  kms_key_id        = local.states.vpc.kms_key_arn
 
   tags = local.tags
 }

@@ -18,7 +18,7 @@ Every project in this repository follows the same industrial standard:
 ### Foundational Stacks
 | Sample | Description | Documentation |
 | :--- | :--- | :---: |
-| [Base](./samples/base) | Unified foundational stack (VPC & AWS Config) | [README](./samples/base/README.md) |
+| [Base](./samples/base) | Unified foundational stack (VPC, endpoints, shared KMS key, ECR cache, AWS Config) | [README](./samples/base/README.md) |
 
 ### Service Samples
 | Sample | Description | Documentation |
@@ -34,7 +34,7 @@ Every project in this repository follows the same industrial standard:
 
 ### Prerequisites
 
-- `terraform` 1.16.5 (pinned in every stack)
+- `terraform` 1.17.2 (pinned in every stack and in CI)
 - `awscli` with a valid session (only to deploy; tests need no AWS account)
 - `task` (go-task) for orchestration
 - `podman` or `docker` for the Floci emulator and KICS
@@ -73,6 +73,7 @@ task review
 ## 🛡️ Security & Quality
 
 - **Project Isolation**: Strict `infra/` vs `app/` directory separation.
+- **One encryption key**: a single customer managed KMS key, created in `base`, encrypts every sample.
 - **No identifier in code**: the state bucket comes from `.env` (`TF_VAR_state_bucket`), never from the code.
 - **Pinned versions**: Terraform, providers and modules are pinned exactly; every variable is validated.
 - **Layered Scanning**: Gitleaks, KICS (IaC) and Trivy (config, vulnerabilities, secrets), `fail-on` HIGH/CRITICAL.
@@ -90,5 +91,5 @@ GitHub Actions (`.github/workflows`), on pull requests only, without any cloud c
 └── check-quality.yml    # pre-commit and CodeQL (weekly run included)
 ```
 
-`.gitlab-ci.yml` mirrors these checks, except `terraform test` on Floci (GitHub only). Renovate (`renovate.json`) keeps
-the action digests and the Floci image up to date.
+GitHub Actions is the only CI (no GitLab mirror). Renovate (`renovate.json`) is configured to keep the action digests
+and the Floci and KICS images (tag and digest, root `Taskfile.yml`) up to date.

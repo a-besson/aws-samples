@@ -6,7 +6,10 @@ module "msk_cluster" {
 
   name = local.name
 
-  kafka_version = "3.5.1"
+  kafka_version = "3.9.x"
+
+  # the shared key of the base stack
+  encryption_at_rest_kms_key_arn = local.states.vpc.kms_key_arn
 
   number_of_broker_nodes = 3
 

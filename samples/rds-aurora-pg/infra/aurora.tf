@@ -1,9 +1,3 @@
-# kics-scan ignore-block
-resource "random_password" "master" {
-  length  = 20
-  special = true
-}
-
 resource "aws_db_subnet_group" "default" {
   name       = "${local.name}-rds-subnet-group"
   subnet_ids = local.states.vpc.subnets_database_ids
@@ -11,9 +5,11 @@ resource "aws_db_subnet_group" "default" {
 
 data "aws_rds_engine_version" "postgresql" {
   engine  = "aurora-postgresql"
-  version = "16.4"
+  version = "16.15"
 }
 
+# Deletion protection is off on purpose (lab cluster without data, see deletion_protection below).
+#trivy:ignore:AWS-0343:exp:2027-01-31
 module "aurora_master" {
   source  = "terraform-aws-modules/rds-aurora/aws"
   version = "9.16.1"
@@ -23,6 +19,10 @@ module "aurora_master" {
   engine_mode       = "provisioned"
   engine_version    = data.aws_rds_engine_version.postgresql.version
   storage_encrypted = true
+  # the shared key of the base stack, for the storage, the master secret and Performance Insights
+  kms_key_id                      = local.states.vpc.kms_key_arn
+  master_user_secret_kms_key_id   = local.states.vpc.kms_key_arn
+  performance_insights_kms_key_id = local.states.vpc.kms_key_arn
 
   database_name                       = "demo"
   master_username                     = "adminpg"
@@ -40,8 +40,9 @@ module "aurora_master" {
 
   monitoring_interval = 60
 
-  apply_immediately   = true
-  deletion_protection = true
+  apply_immediately = true
+  # Lab cluster without data to keep: no protection, so `task destroy-all` can remove it (no final snapshot either)
+  deletion_protection = false
 
   serverlessv2_scaling_configuration = {
     min_capacity             = 0

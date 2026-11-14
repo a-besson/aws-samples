@@ -1,10 +1,10 @@
 locals {
-  name = "lab-${basename(path.cwd)}"
+  name = "lab-msk-akhq"
 
   tags = {
     Environment = "dev"
     Project     = "aws-samples/${local.name}"
-    Stack       = basename(path.cwd)
+    Stack       = "msk-akhq"
     ManagedBy   = "Terraform"
   }
 }
@@ -12,7 +12,7 @@ locals {
 data "aws_caller_identity" "current" {}
 
 terraform {
-  required_version = "1.16.5"
+  required_version = "1.17.2"
   required_providers {
     aws = {
       source  = "hashicorp/aws"

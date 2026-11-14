@@ -18,7 +18,9 @@ provider "aws" {
 
   endpoints {
     ec2           = var.floci_endpoint
+    ecr           = var.floci_endpoint
     iam           = var.floci_endpoint
+    kms           = var.floci_endpoint
     rds           = var.floci_endpoint
     s3            = var.floci_endpoint
     sts           = var.floci_endpoint
@@ -53,6 +55,21 @@ run "apply_on_floci" {
   assert {
     condition     = length(module.vpc.database_subnets) == 3
     error_message = "Expected 3 database subnets"
+  }
+
+  assert {
+    condition     = length(module.vpc_endpoints.endpoints["ecr_dkr"].subnet_ids) == 1 && !contains(keys(module.vpc_endpoints.endpoints), "rds")
+    error_message = "Interface endpoints must sit in a single private subnet, without the unused rds endpoint"
+  }
+
+  assert {
+    condition     = output.ecr_public_pull_through_prefix == "ecr-public"
+    error_message = "The ECR Public pull through cache rule was not created"
+  }
+
+  assert {
+    condition     = one(aws_s3_bucket_server_side_encryption_configuration.config_bucket.rule).apply_server_side_encryption_by_default[0].kms_master_key_id == module.kms.key_arn
+    error_message = "The AWS Config bucket must be encrypted with the shared key"
   }
 
   assert {

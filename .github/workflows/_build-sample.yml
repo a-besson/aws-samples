@@ -28,8 +28,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
-          terraform_version: 1.16.5
+          terraform_version: 1.17.2
       - uses: terraform-linters/setup-tflint@6ffdbaa3be476b3431f7275c26966ef32ff60337 # v6.3.2
+        with:
+          tflint_version: v0.65.0 # the action installs `latest` by default
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .terraform.d/plugin-cache
@@ -63,14 +65,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
         with:
-          terraform_version: 1.16.5
+          terraform_version: 1.17.2
           terraform_wrapper: false
       # Same container as `task <sample>:test`; the image is the one pinned in the root Taskfile.
       - name: Floci - start the emulator
         working-directory: ${{ github.workspace }}
         run: |
           IMAGE="$(sed -n 's#^ *FLOCI_IMAGE: \(.*\)$#\1#p' Taskfile.yml | head -n 1)"
-          docker run -d --name floci -p 4566:4566 -e FLOCI_RUN_AS_ROOT=true \
+          # loopback only: the emulator has no authentication and drives the Docker socket
+          docker run -d --name floci -p 127.0.0.1:4566:4566 -e FLOCI_RUN_AS_ROOT=true \
             -v /var/run/docker.sock:/var/run/docker.sock "$IMAGE"
           for _ in $(seq 1 60); do curl -sf http://localhost:4566/_floci/health >/dev/null && exit 0; sleep 1; done
           docker logs floci
