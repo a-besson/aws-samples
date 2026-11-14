@@ -29,6 +29,14 @@ jobs:
           mkdir -p kics-results
           docker run --rm -v "$PWD:/path:ro" -v "$PWD/kics-results:/out" "$IMAGE" \
             scan -p /path --config /path/kics.config -o /out --report-formats sarif,json
+      # KICS writes some CWE taxa twice and code scanning rejects a SARIF with duplicate items: keep the first copy of
+      # each one. Results reference the CWE taxa by id, so nothing else changes.
+      - name: KICS - drop the duplicate taxa of the SARIF
+        if: always() && hashFiles('kics-results/results.sarif') != ''
+        run: |
+          jq '.runs[].taxonomies[]? |= (if .taxa then .taxa |= reduce .[] as $t ([]; if any(.[]; . == $t) then . else . + [$t] end) else . end)' \
+            kics-results/results.sarif > kics-results/dedup.sarif
+          mv kics-results/dedup.sarif kics-results/results.sarif
       - uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         if: always() && hashFiles('kics-results/results.sarif') != ''
         with:
