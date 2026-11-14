@@ -15,9 +15,10 @@ resource "aws_alb" "main" {
 }
 
 resource "aws_alb_target_group" "app" {
-  name        = "lb-target-group"
-  port        = local.app_port
-  protocol    = "HTTPS"
+  name = "lb-target-group"
+  port = local.app_port
+  # AKHQ serves plain HTTP: TLS ends at the HTTPS listener, the ALB reaches the task over HTTP inside the VPC
+  protocol    = "HTTP"
   vpc_id      = local.states.vpc.vpc_id
   target_type = "ip"
 
