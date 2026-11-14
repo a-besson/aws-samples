@@ -19,7 +19,9 @@
   key), and the log groups, Aurora, its master secret and MSK in the samples.
 - **Key policy**: the account keeps full access through IAM (the default policy), which RDS, MSK and Secrets Manager
   use through grants. CloudWatch Logs (any log group of the account in the region) and AWS Config (delivery to the
-  bucket, restricted to this account) get a statement of their own, as the AWS documentation requires.
+  bucket, restricted to this account) get a statement of their own, as the AWS documentation requires, and so does EventBridge (delivery of the events that
+  exhaust their retries to the encrypted dead letter queues of the event-driven samples). Floci does not evaluate key
+  policies: these statements follow the AWS documentation and are not exercised by the tests.
 - **Cost**: 1 $/month, plus 1 $/month for each of the first two yearly rotations (capped at 3 $/month), plus
   0.03 $ per 10,000 requests. Deleting the stack schedules the key for deletion after 7 days.
 
@@ -36,6 +38,8 @@
 aws ecr get-login-password --region eu-west-3 | podman login --username AWS --password-stdin **********.dkr.ecr.eu-west-3.amazonaws.com
 podman pull --platform linux/amd64 **********.dkr.ecr.eu-west-3.amazonaws.com/ecr-public/nginx/nginx:1.30.6
 podman pull --platform linux/amd64 **********.dkr.ecr.eu-west-3.amazonaws.com/ecr-public/amazonlinux/amazonlinux:2023.12.20261102.0
+# the job of step-function-s3 and ecs-task-s3 runs on ARM64 by default (job_cpu_architecture): pull that platform
+podman pull --platform linux/arm64 **********.dkr.ecr.eu-west-3.amazonaws.com/ecr-public/aws-cli/aws-cli:2.39.6
 crane digest **********.dkr.ecr.eu-west-3.amazonaws.com/ecr-public/nginx/nginx:1.30.6   # must match ecs-service/infra/ecs.tf
 ```
 
