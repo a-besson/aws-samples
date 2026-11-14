@@ -7,14 +7,12 @@
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | 1.17.2 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | 5.100.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | 3.9.1 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
 | <a name="provider_aws"></a> [aws](#provider\_aws) | 5.100.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.9.1 |
 | <a name="provider_terraform"></a> [terraform](#provider\_terraform) | n/a |
 
 ## Modules
@@ -28,7 +26,6 @@
 | Name | Type |
 | ---- | ---- |
 | [aws_db_subnet_group.default](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/resources/db_subnet_group) | resource |
-| [random_password.master](https://registry.terraform.io/providers/hashicorp/random/3.9.1/docs/resources/password) | resource |
 | [aws_rds_engine_version.postgresql](https://registry.terraform.io/providers/hashicorp/aws/5.100.0/docs/data-sources/rds_engine_version) | data source |
 | [terraform_remote_state.vpc](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
 

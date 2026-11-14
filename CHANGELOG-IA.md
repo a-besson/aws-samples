@@ -14,6 +14,7 @@
 - **versions**: Aurora PostgreSQL 16.4 is no longer in the supported minor versions (the `aws_rds_engine_version` lookup cannot resolve it): 16.15, end of standard support 2028-02-28. MSK Kafka 3.5.1 reached end of support on 2025-10-23 (MSK auto-upgrades such clusters without notice): 3.9.x, the version MSK recommends.
 - **images**: task definitions no longer use `:latest`: amazonlinux `2023.12.20261102.0` and nginx `1.30.6` pinned by tag and ECR Public digest, AKHQ `0.28.0` (private ECR copy, README `crane cp` aligned; the ECR registry region now follows `aws_region`).
 - **ecs-service**: the nginx image listens on 80 (`ExposedPorts 80/tcp`) and has no `/health` route, but the task mapped 8080 and probed `/health`: container port 80 and health check on `/`.
+- **rds-aurora-pg**: `random_password.master` removed (dead code since `manage_master_user_password = true`, its KICS ignore and its test assertion with it, plus the then unused `random` provider); `db_subnet_group_name` outputs the name instead of the whole resource.
 
 ## [2026-10-26] - Daily Log - Remove agent prompts and VS Code settings
 

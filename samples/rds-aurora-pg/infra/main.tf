@@ -16,10 +16,6 @@ terraform {
       source  = "hashicorp/aws"
       version = "5.100.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = "3.9.1"
-    }
   }
   backend "s3" {
     key     = "states/aws-lab/aurora-pg"

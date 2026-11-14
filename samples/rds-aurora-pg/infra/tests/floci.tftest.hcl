@@ -67,9 +67,4 @@ run "apply_on_floci" {
     condition     = aws_db_subnet_group.default.name == "lab-rds-aurora-pg-rds-subnet-group"
     error_message = "DB subnet group name did not match"
   }
-
-  assert {
-    condition     = length(random_password.master.result) == 20
-    error_message = "The generated master password must have 20 characters"
-  }
 }

@@ -1,9 +1,3 @@
-# kics-scan ignore-block
-resource "random_password" "master" {
-  length  = 20
-  special = true
-}
-
 resource "aws_db_subnet_group" "default" {
   name       = "${local.name}-rds-subnet-group"
   subnet_ids = local.states.vpc.subnets_database_ids
