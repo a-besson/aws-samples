@@ -8,6 +8,8 @@ data "aws_rds_engine_version" "postgresql" {
   version = "16.15"
 }
 
+# Deletion protection is off on purpose (lab cluster without data, see deletion_protection below).
+#trivy:ignore:AWS-0343:exp:2027-01-31
 module "aurora_master" {
   source  = "terraform-aws-modules/rds-aurora/aws"
   version = "9.16.1"
@@ -34,8 +36,9 @@ module "aurora_master" {
 
   monitoring_interval = 60
 
-  apply_immediately   = true
-  deletion_protection = true
+  apply_immediately = true
+  # Lab cluster without data to keep: no protection, so `task destroy-all` can remove it (no final snapshot either)
+  deletion_protection = false
 
   serverlessv2_scaling_configuration = {
     min_capacity             = 0
