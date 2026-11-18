@@ -6,7 +6,7 @@ dotenv: [.env]
 vars:
   # Single sources of the scanner and emulator images, pinned by tag and digest: read by the tasks below and by the CI
   # (check-cyber.yml, _build-sample.yml), kept by Renovate (renovate.json).
-  KICS_IMAGE: docker.io/checkmarx/kics:v2.2.0@sha256:ef29dbac14b046b1ef65f3280646112e927a61781c5f01bca1aeb723e0b96003
+  KICS_IMAGE: docker.io/checkmarx/kics:v2.2.1@sha256:49ccc54b6ae7f5d5fc95e96f8f95c18c57f3bba047ab611a03d80792bdff6757
   FLOCI_IMAGE: floci/floci:2.4.0@sha256:5ee85db604c4aa74ac76e07ea5cc83086f37bb472bf3dbb97e34019e48efae9c
 
 includes:
