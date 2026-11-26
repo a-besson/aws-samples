@@ -1,6 +1,6 @@
 # Python tooling of the Lambda samples: installed in .venv by `task setup` and by the `python` job of _build-sample.yml.
 # The Lambda runtime provides boto3: it is only needed here for the offline tests (botocore.stub) and the type checks.
-ruff==0.17.5
+ruff==0.17.6
 pyright==1.1.414
 pytest==9.2.0
 boto3==1.44.6
