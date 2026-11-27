@@ -37,7 +37,7 @@ jobs:
           jq '.runs[].taxonomies[]? |= (if .taxa then .taxa |= reduce .[] as $t ([]; if any(.[]; . == $t) then . else . + [$t] end) else . end)' \
             kics-results/results.sarif > kics-results/dedup.sarif
           mv kics-results/dedup.sarif kics-results/results.sarif
-      - uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+      - uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         if: always() && hashFiles('kics-results/results.sarif') != ''
         with:
           sarif_file: kics-results/results.sarif
@@ -67,7 +67,7 @@ jobs:
           scan-type: fs
           scanners: vuln,secret
           trivy-config: trivy.yaml
-      - uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+      - uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         if: always() && hashFiles('trivy-config.sarif') != ''
         with:
           sarif_file: trivy-config.sarif
